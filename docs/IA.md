@@ -114,3 +114,14 @@ obtiene servicios potencialmente afectados. Se demuestra con
 `CMDBTests.test_classification_rejects_cycle`, `test_relation_rejects_cycles_and_self_references`
 y `test_dependency_traversal_is_inverse`. El uso metodológico de un asistente
 para ingeniería de grafos no sustituye estos datos ni una demostración funcional.
+
+## Actualizaciones verificadas del contexto
+
+El registro de commits y sus justificaciones se encuentra en
+docs/contexto/04-actualizaciones-verificadas.md.
+
+La guia de presentacion individual se encuentra en
+docs/DEFENSA.md.
+
+Las evidencias distinguen los cambios realmente versionados
+de los prompts y resultados que aun no cuentan con registro literal.
