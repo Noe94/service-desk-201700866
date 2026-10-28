@@ -125,7 +125,7 @@ Falta incorporarlas como archivos de evidencia versionados.
 | P06 | `QueueRoleGrant`, `QueueUserGrant` | Pruebas de acceso/grants y CONSULTA | Ensayo web por rol |
 | P07 | `claim_ticket`, ordenamiento | Prueba conflicto secuencial + orden SQL | Prueba simultánea PostgreSQL real |
 | P08 | `transfer_ticket` | Rechaza proceso incompatible, exige motivo | Ensayo UI |
-| P09 | `workflows.py` | Rutas de acceso y cambio, transiciones inválidas | Recorridos completos para 7 procesos |
+| P09 | `workflows.py` y `apps/service_desk/tests.py` | Siete recorridos completos con aprobaciones, rechazo de cierre directo y bitácora; prueba aprobada en PostgreSQL | Verificación manual adicional por roles |
 | P10 | `TicketApproval` | Cambio sin aprobar y autoaprobación rechazados | — |
 | P11 | `EventIncident`, `DeskNotification` | E2 crea uno y es idempotente | Escenarios UI E0/E1/E3 completos |
 | P12 | `INCIDENT_GUIDANCE`, función complementaria | Pruebas de límites y mapeo | Revisión detallada de I0–I6 UI |
@@ -140,6 +140,40 @@ No se informa como exitoso un caso parcialmente implementado. Las pruebas
 aislan sus datos y no eliminan los registros de evaluación. Para capturas de
 P18, ejecutar `docker compose restart`, consultar totales antes y después,
 sin `down -v`, y anotar commit, fecha y resultado obtenido.
+
+### P09. Validacion automatizada de los siete procesos
+
+**Fecha:** 28 de octubre de 2026.
+
+**Comando ejecutado:**
+
+`docker compose run --rm web python manage.py test apps.service_desk.tests.DeskTests.test_p09_rutas_completas_siete_procesos -v 2`
+
+**Entrada:** siete procesos configurados, estados diferenciados,
+roles de agente y aprobador y datos de prueba aislados.
+
+**Resultado esperado:** cada proceso recorre sus transiciones permitidas
+hasta CERRADO; se rechaza el cierre directo; se registran las aprobaciones
+correspondientes y la bitacora conserva las transiciones.
+
+**Resultado obtenido:**
+- Una prueba automatizada que contiene siete subpruebas.
+- Los siete recorridos finalizaron correctamente.
+- Tiempo observado: 3.015 segundos.
+- Resultado final: OK.
+
+**Verificacion posterior del harness completo:**
+
+`powershell -ExecutionPolicy Bypass -File .\scripts\verify.ps1`
+
+- Pruebas encontradas: 81.
+- Pruebas aprobadas: 81.
+- Tiempo observado: 32.334 segundos.
+- Django system check: 0 problemas.
+- Resultado final: HARNESS PRINCIPAL: OK.
+
+Los datos se generaron en una base temporal de PostgreSQL.
+La base de evaluacion no fue modificada por estas pruebas.
 
 ## Comandos reproducibles en el equipo del estudiante
 

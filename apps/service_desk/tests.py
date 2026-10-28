@@ -297,3 +297,131 @@ class DeskTests(TestCase):
         QueueUserGrant.objects.create(queue=queue, user=self.other_requester, can_view=True)
         self.assertTrue(queue_allowed(self.other_requester, queue, "view"))
         self.assertFalse(queue_allowed(self.other_requester, queue, "attend"))
+
+
+    def test_p09_rutas_completas_siete_procesos(self):
+        rutas = {
+            Process.NEW_SERVICE: [
+                "ANALISIS", "PENDIENTE_APROBACION", "APROBADO",
+                "IMPLEMENTACION", "RESUELTO", "CERRADO",
+            ],
+            Process.CHANGE: [
+                "EVALUACION", "PENDIENTE_APROBACION", "APROBADO",
+                "PLANIFICADO", "EJECUCION", "VALIDACION",
+                "RESUELTO", "CERRADO",
+            ],
+            Process.INCIDENT: [
+                "CLASIFICADO", "DIAGNOSTICO", "ATENCION",
+                "RECUPERADO", "RESUELTO", "CERRADO",
+            ],
+            Process.EVENT: [
+                "CLASIFICADO", "EVALUADO", "RESPONDIDO",
+                "RESUELTO", "CERRADO",
+            ],
+            Process.PROBLEM: [
+                "INVESTIGACION", "SOLUCION_TEMPORAL",
+                "ERROR_CONOCIDO", "SOLUCION_DEFINITIVA",
+                "RESUELTO", "CERRADO",
+            ],
+            Process.ACCESS: [
+                "PENDIENTE_APROBACION", "APROBADO",
+                "PROVISIONADO", "VALIDADO",
+                "RESUELTO", "CERRADO",
+            ],
+            Process.SERVICE: [
+                "VALIDACION", "ASIGNACION", "CUMPLIMIENTO",
+                "CONFIRMACION", "RESUELTO", "CERRADO",
+            ],
+        }
+
+        requisitos = {
+            Process.NEW_SERVICE: {
+                "necesidad": "Nuevo servicio solicitado",
+                "viabilidad": "Viable",
+            },
+            Process.CHANGE: {
+                "evaluacion_impacto": "Impacto controlado",
+                "evaluacion_riesgo": "Riesgo bajo",
+                "plan_pruebas": "Verificar operacion",
+                "plan_reversion": "Restaurar configuracion anterior",
+            },
+            Process.PROBLEM: {
+                "causa_raiz": "Configuracion incorrecta",
+            },
+            Process.ACCESS: {
+                "beneficiario": "Usuario de prueba",
+                "recurso": "Sistema de prueba",
+                "permiso": "Lectura",
+            },
+            Process.SERVICE: {
+                "cumplimiento": "Solicitud atendida",
+            },
+        }
+
+        for proceso, estados in rutas.items():
+            with self.subTest(proceso=proceso):
+
+                detalles = {
+                    "solucion": "Servicio recuperado",
+                    "resolucion": "Caso resuelto y validado",
+                    **requisitos.get(proceso, {}),
+                }
+
+                ticket = self.make_ticket(
+                    process=proceso,
+                    details=detalles,
+                )
+
+                claim_ticket(ticket.pk, self.agent)
+
+                with self.assertRaises(ValidationError):
+                    transition_ticket(
+                        ticket.pk,
+                        self.agent,
+                        "CERRADO",
+                        reason="Cierre directo no permitido",
+                    )
+
+                for estado in estados:
+                    actor = (
+                        self.approver
+                        if estado in {"APROBADO", "RECHAZADO"}
+                        else self.agent
+                    )
+
+                    transition_ticket(
+                        ticket.pk,
+                        actor,
+                        estado,
+                        reason="Verificacion automatizada P09",
+                    )
+
+                ticket.refresh_from_db()
+
+                self.assertEqual(ticket.status, "CERRADO")
+                self.assertIsNotNone(ticket.resolved_at)
+                self.assertIsNotNone(ticket.closed_at)
+
+                self.assertEqual(
+                    ticket.history.filter(
+                        action="TRANSICION"
+                    ).count(),
+                    len(estados),
+                )
+
+                procesos_aprobacion = {
+                    Process.NEW_SERVICE,
+                    Process.CHANGE,
+                    Process.ACCESS,
+                }
+
+                aprobaciones_esperadas = (
+                    1 if proceso in procesos_aprobacion else 0
+                )
+
+                self.assertEqual(
+                    ticket.approvals.filter(
+                        decision="APROBADO"
+                    ).count(),
+                    aprobaciones_esperadas,
+                )
