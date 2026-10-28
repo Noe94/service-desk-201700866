@@ -719,3 +719,180 @@ class DeskTests(TestCase):
             respuesta.context["resolution_pct"],
             100.0,
         )
+
+
+from django.test import TransactionTestCase
+
+
+class P07ConcurrentClaimTests(TransactionTestCase):
+
+    def test_p07_dos_agentes_reclaman_mismo_ticket_postgresql(self):
+        from concurrent.futures import ThreadPoolExecutor
+        from threading import Barrier
+
+        from django.contrib.auth import get_user_model
+        from django.contrib.auth.models import Group
+        from django.db import connection, connections, close_old_connections
+
+        from apps.catalog.models import ServicioNivel1, ServicioNivel2
+        from apps.organization.models import (
+            Empresa, Area, Departamento, Seccion, Puesto
+        )
+
+        from .models import Process, Queue, QueueRoleGrant, Ticket
+        from .services import TicketConflict, claim_ticket, create_ticket
+
+        self.assertEqual(connection.vendor, "postgresql")
+
+        empresa = Empresa.objects.create(
+            codigo="P07-EMP",
+            nombre="Empresa temporal P07",
+        )
+
+        area = Area.objects.create(
+            empresa=empresa,
+            codigo="P07-AREA",
+            nombre="Area temporal",
+        )
+
+        departamento = Departamento.objects.create(
+            area=area,
+            codigo="P07-DEP",
+            nombre="Departamento temporal",
+        )
+
+        seccion = Seccion.objects.create(
+            departamento=departamento,
+            codigo="P07-SEC",
+            nombre="Seccion temporal",
+        )
+
+        puesto = Puesto.objects.create(
+            seccion=seccion,
+            codigo="P07-PUESTO",
+            nombre="Agente de pruebas",
+        )
+
+        nivel1 = ServicioNivel1.objects.create(
+            codigo="P07-N1",
+            nombre="Servicio temporal nivel 1",
+        )
+
+        servicio = ServicioNivel2.objects.create(
+            nivel1=nivel1,
+            codigo="P07-N2",
+            nombre="Servicio temporal nivel 2",
+        )
+
+        cola = Queue.objects.create(
+            code="P07-COLA",
+            name="Cola concurrencia",
+            process=Process.INCIDENT,
+        )
+
+        grupo = Group.objects.create(name="AGENTE")
+
+        QueueRoleGrant.objects.create(
+            queue=cola,
+            role=grupo,
+            can_view=True,
+            can_attend=True,
+        )
+
+        Usuario = get_user_model()
+
+        agente1 = Usuario.objects.create_user(
+            username="p07_agente_1",
+            email="p07_agente_1@example.local",
+            puesto=puesto,
+            rol="OPERATIVO",
+        )
+
+        agente2 = Usuario.objects.create_user(
+            username="p07_agente_2",
+            email="p07_agente_2@example.local",
+            puesto=puesto,
+            rol="OPERATIVO",
+        )
+
+        agente1.groups.add(grupo)
+        agente2.groups.add(grupo)
+
+        ticket = create_ticket(
+            actor=agente1,
+            requester=agente1,
+            service=servicio,
+            queue=cola,
+            title="Prueba de concurrencia P07",
+            description="Dos agentes intentan tomar el mismo ticket",
+            priority="P2",
+            impact="MEDIA",
+            urgency="ALTA",
+            channel="WEB",
+            no_ci_reason="Prueba aislada sin CI",
+            incident_category="I1",
+        )
+
+        barrera = Barrier(3)
+
+        def intentar_asignar(usuario_id):
+            close_old_connections()
+
+            try:
+                usuario = Usuario.objects.get(pk=usuario_id)
+
+                barrera.wait(timeout=20)
+
+                try:
+                    claim_ticket(ticket.pk, usuario)
+                    return "ASIGNADO"
+
+                except TicketConflict:
+                    return "CONFLICTO"
+
+            finally:
+                connections.close_all()
+
+        with ThreadPoolExecutor(max_workers=2) as ejecutor:
+            futuro1 = ejecutor.submit(
+                intentar_asignar,
+                agente1.pk,
+            )
+
+            futuro2 = ejecutor.submit(
+                intentar_asignar,
+                agente2.pk,
+            )
+
+            barrera.wait(timeout=20)
+
+            resultados = [
+                futuro1.result(timeout=30),
+                futuro2.result(timeout=30),
+            ]
+
+        ticket.refresh_from_db()
+
+        self.assertEqual(
+            resultados.count("ASIGNADO"),
+            1,
+            resultados,
+        )
+
+        self.assertEqual(
+            resultados.count("CONFLICTO"),
+            1,
+            resultados,
+        )
+
+        self.assertIn(
+            ticket.assignee_id,
+            [agente1.pk, agente2.pk],
+        )
+
+        self.assertEqual(
+            ticket.history.filter(action="ASIGNACION").count(),
+            1,
+        )
+
+        self.assertIsNotNone(ticket.first_response_at)
