@@ -162,7 +162,7 @@ los datos de demostracion.
 | P13 | `TicketRelation` | Relaciones entre tickets modeladas | Recorrido incidente–problema–cambio |
 | P14 | `CIRelation`, `potentially_affected_services` | Ciclos y recorrido inverso probados | Navegación en PostgreSQL |
 | P15 | `TicketHistory`, `reopen_ticket` | Reapertura, cierre, actor | — |
-| P16 | Vista `cmdb:list`, 30 por página | Filtros unitarios y 5000 insertados | Medir latencia real con 5000 |
+| P16 | Vista `cmdb:list`, 30 por página | Medicion real en PostgreSQL sobre 5000 CI: paginas 1, 84, 167 y filtro SERVIDOR; ver `docs/evidencias/P16-medicion-20261028.md` | Latencia HTTP no medida |
 | P17 | `dashboard`, `pause_ticket`, `resume_ticket` | Conteos y pausa | Métricas controladas con reapertura |
 | P18 | `postgres_data`/`attachments_data` Compose | Reinicio real: 12 N1, 46 N2, 5,000 CI, 38 tickets, 7 colas, 163 registros de auditoría y 1 vínculo evento-incidente conservados | Persistencia de archivos adjuntos aún no ensayada |
 
