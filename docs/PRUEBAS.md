@@ -67,8 +67,28 @@ Conteos observados después del reinicio:
 - Colas: 7.
 
 Resultado: los conteos principales permanecieron iguales.
-Pendiente: verificar explícitamente catálogo e historial antes y después
-del reinicio para completar toda la evidencia de P18.
+### Segunda comprobación de P18
+
+Fecha: 28 de octubre de 2026.
+
+Se ejecutó nuevamente `docker compose restart` después
+de generar el incidente SD-0000038.
+
+| Información | Antes | Después |
+|---|---:|---:|
+| Catálogo nivel 1 | 12 | 12 |
+| Catálogo nivel 2 | 46 | 46 |
+| Dispositivos CMDB | 5,000 | 5,000 |
+| Tickets | 38 | 38 |
+| Colas | 7 | 7 |
+| Registros de bitácora | 163 | 163 |
+| Vínculos evento-incidente | 1 | 1 |
+
+Resultado obtenido: los siete conteos permanecieron idénticos.
+
+La prueba confirma la persistencia de los registros principales,
+incluido el historial de auditoría y la vinculación del evento E2.
+No se verificó la conservación de archivos adjuntos en este ensayo.
 
 ### P11. Evento E2 e incidente generado
 
@@ -114,7 +134,7 @@ Falta incorporarlas como archivos de evidencia versionados.
 | P15 | `TicketHistory`, `reopen_ticket` | Reapertura, cierre, actor | — |
 | P16 | Vista `cmdb:list`, 30 por página | Filtros unitarios y 5000 insertados | Medir latencia real con 5000 |
 | P17 | `dashboard`, `pause_ticket`, `resume_ticket` | Conteos y pausa | Métricas controladas con reapertura |
-| P18 | `postgres_data`/`attachments_data` Compose | Persistencia diseñada | **Reinicio real y conteos antes/después** |
+| P18 | `postgres_data`/`attachments_data` Compose | Reinicio real: 12 N1, 46 N2, 5,000 CI, 38 tickets, 7 colas, 163 registros de auditoría y 1 vínculo evento-incidente conservados | Persistencia de archivos adjuntos aún no ensayada |
 
 No se informa como exitoso un caso parcialmente implementado. Las pruebas
 aislan sus datos y no eliminan los registros de evaluación. Para capturas de

@@ -151,11 +151,19 @@ Recuperación ante error: verifique Docker Desktop, puerto 8000, `.env`,
 - [Plan y límites de alcance](docs/PLAN_SERVICE_DESK.md)
 - [Enunciado y fuentes docentes preservadas](docs/fuentes/)
 
-**Validación local realizada:** 80 pruebas Django pasaron utilizando SQLite de
-prueba aislada; importación 12/46; semilla de 5,000 sin duplicados y 37 tickets.
-**Pendiente de verificación presencial:** construcción del contenedor y pruebas
-PostgreSQL/Docker, incluida P18 (persistencia tras reiniciar), en el equipo Windows.
-Los resultados locales SQLite no sustituyen los de PostgreSQL.
+**Validación real en Windows (28/10/2026):**
+
+- Docker Compose y PostgreSQL funcionando correctamente.
+- Django system check: 0 problemas.
+- Suite automatizada: 80 de 80 pruebas aprobadas en 30.188 segundos.
+- Catálogo: 12 servicios N1 y 46 servicios N2.
+- CMDB: 5,000 dispositivos persistidos.
+- Service Desk: 7 colas y 37 tickets iniciales de demostración.
+- Evento E2 SD-0000020: generó el incidente SD-0000038.
+- Persistencia P18: 38 tickets, 5,000 CI, 7 colas,
+  163 registros de bitácora y el catálogo conservados tras reiniciar Docker.
+
+Los resultados detallados se encuentran en `docs/PRUEBAS.md`.
 
 ## 8. Limitaciones conocidas de esta versión
 
@@ -165,7 +173,5 @@ Los resultados locales SQLite no sustituyen los de PostgreSQL.
   de tickets, pero falta una pantalla especializada para ese recorrido.
 - La información de prioridad y redundancia de I0–I6 es orientación de clase;
   no se fuerza automáticamente el SLA por la duración.
-- No se ha hecho una prueba real de contenedores desde esta sesión porque
-  esta computadora de ejecución no tiene Docker.
 - Los commits de evolución del contexto deben registrarse en el repositorio
   Git del estudiante; no se simulan hashes ni evidencias.
