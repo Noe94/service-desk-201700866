@@ -155,13 +155,17 @@ Recuperación ante error: verifique Docker Desktop, puerto 8000, `.env`,
 
 - Docker Compose y PostgreSQL funcionando correctamente.
 - Django system check: 0 problemas.
-- Suite automatizada mas reciente: 82 de 82 pruebas aprobadas en 33.492 segundos.
+- Suite automatizada mas reciente: 85 de 85 pruebas aprobadas en 18.675 segundos.
 - Catálogo: 12 servicios N1 y 46 servicios N2.
 - CMDB: 5,000 dispositivos persistidos.
 - Service Desk: 7 colas y 37 tickets iniciales de demostración.
 - Evento E2 SD-0000020: generó el incidente SD-0000038.
 - Persistencia P18: 38 tickets, 5,000 CI, 7 colas,
   163 registros de bitácora y el catálogo conservados tras reiniciar Docker.
+- Persistencia adicional P18: archivo adjunto sintetico conservado con
+  SHA-256 identico despues del reinicio.
+- Concurrencia P07: dos agentes simultaneos, una asignacion y un conflicto.
+- Trazabilidad P13 e indicadores P17: pruebas automatizadas aprobadas.
 
 Los resultados detallados se encuentran en `docs/PRUEBAS.md`.
 

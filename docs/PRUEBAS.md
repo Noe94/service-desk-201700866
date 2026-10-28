@@ -143,6 +143,129 @@ Verificacion posterior:
 La prueba utilizo una base temporal de PostgreSQL y no modifico
 los datos de demostracion.
 
+## Evidencia final P07 P13 P17 P18
+
+**Fecha:** 28 de octubre de 2026.
+
+**Entorno:** Windows, PowerShell, Docker Compose y PostgreSQL 17.
+
+**Commit de implementacion y pruebas:** `58c8625`.
+
+### P07. Reclamo concurrente real
+
+Comando:
+
+`docker compose run --rm web python manage.py test apps.service_desk.tests.P07ConcurrentClaimTests.test_p07_dos_agentes_reclaman_mismo_ticket_postgresql -v 2`
+
+Entrada:
+- Un ticket disponible en una cola de incidentes.
+- Dos usuarios operativos autorizados como agentes.
+- Dos hilos concurrentes con conexiones independientes a PostgreSQL.
+
+Resultado esperado:
+- Una asignacion exitosa.
+- Un conflicto para el segundo agente.
+- Una sola asignacion conservada en la base de datos.
+
+Resultado obtenido:
+- Prueba aprobada.
+- Tiempo observado: 0.325 segundos.
+- Una asignacion y un conflicto.
+- Una sola entrada ASIGNACION en la bitacora.
+
+La prueba utilizo una base temporal y no modifico los tickets de evaluacion.
+
+### P13. Relacion incidente-problema-cambio
+
+Prueba:
+
+`apps.service_desk.tests.DeskTests.test_p13_trazabilidad_incidente_problema_cambio`
+
+Entrada:
+- Un incidente.
+- Un problema.
+- Un cambio.
+- Relaciones verificables entre los tres tickets.
+
+Resultado obtenido:
+- Incidente vinculado a problema.
+- Problema vinculado a cambio.
+- Recorrido recuperado desde el ORM.
+- Relaciones inversas recuperables.
+- Historial de creacion presente.
+
+Limitacion:
+- La prueba acredita el modelo y su trazabilidad.
+- Falta demostrar el recorrido especializado en la interfaz.
+
+### P17. Indicadores con datos controlados
+
+Prueba:
+
+`apps.service_desk.tests.DeskTests.test_p17_indicadores_controlados_pausas_reaperturas`
+
+Entrada:
+- Tres tickets de prueba.
+- Uno en pausa.
+- Uno cerrado.
+- Uno reabierto.
+
+Resultado obtenido:
+- Total: 3 tickets.
+- Abiertos: 2.
+- En pausa: 1.
+- Primera atencion promedio: 11.7 minutos.
+- Resolucion promedio: 70.0 minutos.
+- Mayor antiguedad: 3.3 horas.
+- Cumplimiento de primera respuesta: 100 %.
+- Cumplimiento de resolucion: 100 %.
+- Reapertura registrada en bitacora.
+
+Estos resultados pertenecen a datos controlados en una base temporal.
+
+### P18. Persistencia real de adjunto
+
+Comando de reinicio:
+
+`docker compose restart`
+
+Archivo sintetico:
+
+`desk/ticket_1/P18-persistencia-sintetica.txt`
+
+Resultado antes del reinicio:
+- Identificador del adjunto: 1.
+- SHA-256:
+  `22a50c62d51b57aac317ebfe5fb559b32dd2a7b75610e47c006af4c6c1b5ef9a`
+
+Resultado despues del reinicio:
+- Identificador del adjunto: 1.
+- Misma ruta.
+- Mismo SHA-256.
+
+Conclusion:
+- El archivo mantuvo su contenido tras reiniciar los contenedores.
+- La base de datos conservo la referencia del adjunto.
+- El archivo pertenece a los datos sinteticos de demostracion.
+
+### Harness completo posterior
+
+Comando:
+
+`powershell -ExecutionPolicy Bypass -File .\scripts\verify.ps1`
+
+Resultado obtenido:
+- PostgreSQL saludable.
+- Django system check: 0 problemas.
+- Pruebas encontradas: 85.
+- Pruebas aprobadas: 85.
+- Tiempo observado: 18.675 segundos.
+- Resultado: HARNESS PRINCIPAL: OK.
+- Commit publicado: `58c8625`.
+
+Las pruebas automatizadas usan una base temporal. No se eliminaron los
+5,000 dispositivos ni los tickets preparados para la evaluacion.
+
 ## Matriz
 
 | Caso | Implementación | Evidencia actual | Pendiente |
@@ -153,18 +276,18 @@ los datos de demostracion.
 | P04 | `CIClass` y fuentes | Validación de ciclos y `MODELO.md` | Contraste visual en defensa |
 | P05 | `create_ticket` | Valida cola, solicitante, servicio, motivo CI | Caso más amplio de FK inválidas |
 | P06 | `QueueRoleGrant`, `QueueUserGrant` | Pruebas de acceso/grants y CONSULTA | Ensayo web por rol |
-| P07 | `claim_ticket`, ordenamiento | Prueba conflicto secuencial + orden SQL | Prueba simultánea PostgreSQL real |
+| P07 | claim_ticket y P07ConcurrentClaimTests | Dos agentes simultaneos en PostgreSQL: una asignacion y un conflicto; una sola entrada ASIGNACION. Prueba aprobada en 0.325 s. | — |
 | P08 | `transfer_ticket` | Rechaza proceso incompatible, exige motivo | Ensayo UI |
 | P09 | `workflows.py` y `apps/service_desk/tests.py` | Siete recorridos completos con aprobaciones, rechazo de cierre directo y bitácora; prueba aprobada en PostgreSQL | Verificación manual adicional por roles |
 | P10 | `TicketApproval` | Cambio sin aprobar y autoaprobación rechazados | — |
 | P11 | `EventIncident`, `DeskNotification` y pruebas Django | E0-E3 comprobados en PostgreSQL: E0/E1 sin incidente, E2 con incidente I1 y E3 con incidente I6; E2 verificado tambien en interfaz | Demostracion manual E3 pendiente |
 | P12 | `INCIDENT_GUIDANCE`, función complementaria | Pruebas de límites y mapeo | Revisión detallada de I0–I6 UI |
-| P13 | `TicketRelation` | Relaciones entre tickets modeladas | Recorrido incidente–problema–cambio |
+| P13 | TicketRelation y prueba de trazabilidad | Recorrido incidente-problema-cambio recuperado mediante relaciones ORM; historial existente en los tres tickets. | Recorrido desde interfaz pendiente |
 | P14 | `CIRelation`, `potentially_affected_services` | Ciclos y recorrido inverso probados | Navegación en PostgreSQL |
 | P15 | `TicketHistory`, `reopen_ticket` | Reapertura, cierre, actor | — |
 | P16 | Vista `cmdb:list`, 30 por página | Medicion real en PostgreSQL sobre 5000 CI: paginas 1, 84, 167 y filtro SERVIDOR; ver `docs/evidencias/P16-medicion-20261028.md` | Latencia HTTP no medida |
-| P17 | `dashboard`, `pause_ticket`, `resume_ticket` | Conteos y pausa | Métricas controladas con reapertura |
-| P18 | `postgres_data`/`attachments_data` Compose | Reinicio real: 12 N1, 46 N2, 5,000 CI, 38 tickets, 7 colas, 163 registros de auditoría y 1 vínculo evento-incidente conservados | Persistencia de archivos adjuntos aún no ensayada |
+| P17 | dashboard, pausas y reapertura | Tres tickets controlados: 2 abiertos, 1 pausado, primera respuesta promedio 11.7 min, resolucion promedio 70 min y antiguedad maxima 3.3 h. | Demostracion manual adicional |
+| P18 | Volumenes postgres_data y ttachments_data | Reinicio real: catalogo, 5000 CI, tickets e historial conservados. Archivo sintetico recuperado con SHA-256 identico. | — |
 
 No se informa como exitoso un caso parcialmente implementado. Las pruebas
 aislan sus datos y no eliminan los registros de evaluación. Para capturas de
