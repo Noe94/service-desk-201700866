@@ -533,3 +533,189 @@ class DeskTests(TestCase):
                     self.assertEqual(ticket.status, "EVALUADO")
                 else:
                     self.assertEqual(ticket.status, "RESPONDIDO")
+
+
+    def test_p13_trazabilidad_incidente_problema_cambio(self):
+        from .models import TicketRelation
+
+        incidente = self.make_ticket(Process.INCIDENT)
+
+        problema = self.make_ticket(
+            Process.PROBLEM,
+            details={
+                "causa_raiz": "Fallo recurrente identificado",
+                "solucion_temporal": "Procedimiento temporal",
+                "error_conocido": "Fallo documentado",
+                "resolucion": "Correccion definitiva propuesta",
+            },
+        )
+
+        cambio = self.make_ticket(
+            Process.CHANGE,
+            details={
+                "evaluacion_impacto": "Impacto medio",
+                "evaluacion_riesgo": "Riesgo bajo",
+                "plan_pruebas": "Validar el servicio",
+                "plan_reversion": "Restaurar configuracion",
+                "resolucion": "Implementacion verificada",
+            },
+        )
+
+        TicketRelation.objects.create(
+            source=incidente,
+            target=problema,
+            relation_type=TicketRelation.Type.RELATED,
+        )
+
+        TicketRelation.objects.create(
+            source=problema,
+            target=cambio,
+            relation_type=TicketRelation.Type.CAUSE,
+        )
+
+        relacion_incidente = TicketRelation.objects.get(
+            source=incidente,
+            target__process=Process.PROBLEM,
+        )
+
+        self.assertEqual(
+            relacion_incidente.target_id,
+            problema.pk,
+        )
+
+        relacion_cambio = TicketRelation.objects.get(
+            source=relacion_incidente.target,
+            target__process=Process.CHANGE,
+        )
+
+        self.assertEqual(
+            relacion_cambio.target_id,
+            cambio.pk,
+        )
+
+        self.assertEqual(
+            incidente.out_relations.count(),
+            1,
+        )
+
+        self.assertEqual(
+            problema.in_relations.count(),
+            1,
+        )
+
+        self.assertEqual(
+            problema.out_relations.count(),
+            1,
+        )
+
+        self.assertEqual(
+            cambio.in_relations.count(),
+            1,
+        )
+
+        self.assertNotEqual(incidente.number, problema.number)
+        self.assertNotEqual(problema.number, cambio.number)
+
+        self.assertTrue(incidente.history.exists())
+        self.assertTrue(problema.history.exists())
+        self.assertTrue(cambio.history.exists())
+
+    def test_p17_indicadores_controlados_pausas_reaperturas(self):
+        from datetime import timedelta
+        from django.utils import timezone
+        from .views import elapsed_minutes
+
+        ahora = timezone.now()
+
+        pausado = self.make_ticket()
+
+        Ticket.objects.filter(pk=pausado.pk).update(
+            created_at=ahora - timedelta(minutes=120),
+            first_response_at=ahora - timedelta(minutes=110),
+            paused_at=ahora - timedelta(minutes=40),
+            paused_seconds=0,
+        )
+
+        pausado.refresh_from_db()
+
+        cerrado = self.make_ticket()
+
+        Ticket.objects.filter(pk=cerrado.pk).update(
+            created_at=ahora - timedelta(minutes=100),
+            first_response_at=ahora - timedelta(minutes=85),
+            resolved_at=ahora - timedelta(minutes=30),
+            closed_at=ahora - timedelta(minutes=25),
+            status="CERRADO",
+        )
+
+        cerrado.refresh_from_db()
+
+        reabierto = self.make_ticket()
+
+        Ticket.objects.filter(pk=reabierto.pk).update(
+            created_at=ahora - timedelta(minutes=200),
+            first_response_at=ahora - timedelta(minutes=190),
+            resolved_at=ahora - timedelta(minutes=20),
+            closed_at=ahora - timedelta(minutes=10),
+            status="CERRADO",
+        )
+
+        reopen_ticket(
+            reabierto.pk,
+            self.requester,
+            reason="Se reproduce el inconveniente",
+        )
+
+        reabierto.refresh_from_db()
+
+        self.assertEqual(reabierto.status, "REABIERTO")
+        self.assertEqual(reabierto.reopen_count, 1)
+        self.assertIsNone(reabierto.closed_at)
+        self.assertIsNone(reabierto.resolved_at)
+
+        self.assertEqual(
+            reabierto.history.filter(action="REAPERTURA").count(),
+            1,
+        )
+
+        self.assertAlmostEqual(
+            elapsed_minutes(pausado, ahora),
+            80.0,
+            places=1,
+        )
+
+        self.client.force_login(self.requester)
+
+        respuesta = self.client.get(
+            reverse("service_desk:dashboard")
+        )
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(respuesta.context["total"], 3)
+        self.assertEqual(respuesta.context["open"], 2)
+        self.assertEqual(respuesta.context["paused"], 1)
+
+        self.assertEqual(
+            respuesta.context["average_first"],
+            11.7,
+        )
+
+        self.assertEqual(
+            respuesta.context["average_resolved"],
+            70.0,
+        )
+
+        self.assertEqual(
+            respuesta.context["oldest"],
+            3.3,
+        )
+
+        self.assertEqual(
+            respuesta.context["response_pct"],
+            100.0,
+        )
+
+        self.assertEqual(
+            respuesta.context["resolution_pct"],
+            100.0,
+        )
