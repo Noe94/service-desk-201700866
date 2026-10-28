@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}{{ ci.code }} · CMDB{% endblock %}
+{% block content %}
+<main class="container content">
+  <div class="page-header"><div><h1>{{ ci.code }} · {{ ci.name }}</h1><p class="meta">{{ ci.classification.full_path }}</p></div>
+    {% if request.user.rol == 'ADMIN' %}<a class="button" href="{% url 'cmdb:edit' ci.pk %}">Editar CI</a>{% endif %}</div>
+  <div class="card"><p><strong>Serie:</strong> {{ ci.serial_number|default:'No aplica' }} · <strong>Estado:</strong> {{ ci.get_status_display }}</p>
+    <p><strong>Ubicación:</strong> {{ ci.location }} · <strong>Responsable:</strong> {{ ci.owner.username }}</p>
+    <p><strong>Versión:</strong> {{ ci.version|default:'No aplica' }} · <strong>Seguridad:</strong> {{ ci.security_level }}</p>
+    <p>{{ ci.description }}</p><p><strong>Atributos técnicos:</strong> {{ ci.attributes }}</p>
+    <p><strong>Documentación:</strong> {{ ci.documentation|default:'No registrada' }}</p></div>
+  <div class="card"><h2>Servicios directamente vinculados</h2>
+    {% for service in services %}<p>{{ service.codigo }} · {{ service.nombre }}</p>{% empty %}<p>Sin asociaciones.</p>{% endfor %}</div>
+  <div class="card"><h2>Relaciones técnicas</h2>
+    <h3>Desde este CI</h3>{% for rel in out_relations %}<p>{{ rel.get_relation_type_display }} <a href="{% url 'cmdb:detail' rel.target.pk %}">{{ rel.target.code }}</a></p>{% empty %}<p>Sin relaciones de salida.</p>{% endfor %}
+    <h3>Hacia este CI</h3>{% for rel in in_relations %}<p><a href="{% url 'cmdb:detail' rel.source.pk %}">{{ rel.source.code }}</a> {{ rel.get_relation_type_display }}</p>{% empty %}<p>Sin relaciones de entrada.</p>{% endfor %}
+    {% if request.user.rol == 'ADMIN' %}<form method="post" action="{% url 'cmdb:relation_add' ci.pk %}">{% csrf_token %}
+      {{ relation_form.as_p }}<button class="button" type="submit">Agregar relación</button></form>{% endif %}</div>
+  <div class="card"><h2>Servicios potencialmente afectados por este CI</h2>
+    <p class="meta">Recorrido inverso de depende de y alojado en; no certifica una interrupción real.</p>
+    {% for service in affected %}<p>{{ service.codigo }} · {{ service.nombre }}</p>{% empty %}<p>Sin servicios alcanzables.</p>{% endfor %}</div>
+  <div class="card"><h2>Tickets asociados que puede consultar</h2>
+    {% for ticket in tickets %}<p><a href="{% url 'service_desk:ticket_detail' ticket.pk %}">{{ ticket.number }}</a> · {{ ticket.title }}</p>{% empty %}<p>Sin tickets visibles.</p>{% endfor %}</div>
+</main>
+{% endblock %}

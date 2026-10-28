@@ -1,0 +1,117 @@
+﻿{% extends "base.html" %}
+
+{% block title %}
+{{ config.titulo }} - Catálogo TI
+{% endblock %}
+
+{% block content %}
+
+<main class="container content">
+
+    <div class="page-header">
+
+        <div>
+            <h1>{{ config.titulo }}</h1>
+
+            <p class="meta">
+                Valores disponibles para los servicios.
+            </p>
+        </div>
+
+        {% if request.user.rol == "ADMIN" %}
+            <a
+                class="button"
+                href="{% url 'catalog:option_create' option %}"
+            >
+                Nuevo
+            </a>
+        {% endif %}
+
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="message {{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="table-wrap">
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Estado</th>
+
+                    {% if request.user.rol == "ADMIN" %}
+                        <th>Acciones</th>
+                    {% endif %}
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for item in objects %}
+                    <tr>
+
+                        <td>{{ item.nombre }}</td>
+
+                        <td>
+                            {% if item.activo %}
+                                <span class="badge badge-active">
+                                    Activo
+                                </span>
+                            {% else %}
+                                <span class="badge">
+                                    Inactivo
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        {% if request.user.rol == "ADMIN" %}
+                            <td class="actions-cell">
+
+                                <a
+                                    class="button button-small button-secondary"
+                                    href="{% url 'catalog:option_update' option item.pk %}"
+                                >
+                                    Editar
+                                </a>
+
+                                <form
+                                    method="post"
+                                    action="{% url 'catalog:option_toggle' option item.pk %}"
+                                >
+                                    {% csrf_token %}
+
+                                    <button
+                                        class="button button-small button-secondary"
+                                        type="submit"
+                                    >
+                                        {% if item.activo %}
+                                            Desactivar
+                                        {% else %}
+                                            Reactivar
+                                        {% endif %}
+                                    </button>
+
+                                </form>
+
+                            </td>
+                        {% endif %}
+
+                    </tr>
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</main>
+
+{% endblock %}

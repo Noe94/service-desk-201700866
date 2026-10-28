@@ -1,0 +1,74 @@
+﻿{% extends "base.html" %}
+
+{% block title %}
+{{ accion }} Usuario - Catálogo TI
+{% endblock %}
+
+{% block content %}
+
+<main class="container content">
+
+    <div class="form-card">
+
+        <h1>
+            {{ accion }} Usuario
+        </h1>
+
+        <form method="post">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="error-box">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            {% for field in form %}
+
+                <div class="form-group">
+
+                    {{ field.label_tag }}
+
+                    {{ field }}
+
+                    {% if field.help_text %}
+                        <p class="meta">
+                            {{ field.help_text }}
+                        </p>
+                    {% endif %}
+
+                    {% if field.errors %}
+                        <div class="field-error">
+                            {{ field.errors }}
+                        </div>
+                    {% endif %}
+
+                </div>
+
+            {% endfor %}
+
+            <div class="form-actions">
+
+                <button
+                    class="button"
+                    type="submit"
+                >
+                    Guardar
+                </button>
+
+                <a
+                    class="button button-secondary"
+                    href="{% url 'accounts:user_list' %}"
+                >
+                    Cancelar
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</main>
+
+{% endblock %}

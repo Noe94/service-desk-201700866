@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Tickets | Service Desk{% endblock %}
+{% block content %}
+<main class="container content">
+  <div class="page-header"><div><h1>Tickets</h1><p class="meta">Bandeja según el solicitante y las colas autorizadas.</p></div>
+    {% if can_create %}<a class="button" href="{% url 'service_desk:ticket_create' %}">Nuevo ticket</a>{% endif %}
+  </div>
+  <form method="get" class="filter-grid">
+    <input class="form-control" name="numero" placeholder="Número SD-..." value="{{ request.GET.numero }}">
+    <select class="form-control" name="proceso"><option value="">Todos los procesos</option>
+      {% for value, label in processes %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+    </select>
+    <select class="form-control" name="cola"><option value="">Todas las colas</option>
+      {% for q in queues %}<option value="{{ q.pk }}">{{ q.code }}</option>{% endfor %}
+    </select>
+    <input class="form-control" name="estado" placeholder="Estado" value="{{ request.GET.estado }}">
+    <select class="form-control" name="prioridad"><option value="">Todas las prioridades</option>
+      <option value="P1">P1</option><option value="P2">P2</option><option value="P3">P3</option><option value="P4">P4</option>
+    </select>
+    <input class="form-control" name="servicio" placeholder="ID de servicio" value="{{ request.GET.servicio }}">
+    <input class="form-control" name="responsable" placeholder="ID de responsable" value="{{ request.GET.responsable }}">
+    <input class="form-control" type="date" name="desde" value="{{ request.GET.desde }}">
+    <input class="form-control" type="date" name="hasta" value="{{ request.GET.hasta }}">
+    <div class="filter-actions"><button class="button" type="submit">Filtrar</button>
+      <a class="button button-secondary" href="{% url 'service_desk:tickets' %}">Limpiar</a></div>
+  </form>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Número</th><th>Título</th><th>Proceso</th><th>Cola</th><th>Estado</th><th>Prioridad</th><th>Responsable</th><th>Fecha</th></tr></thead>
+    <tbody>
+      {% for ticket in page %}<tr>
+        <td><a href="{% url 'service_desk:ticket_detail' ticket.pk %}">{{ ticket.number }}</a></td>
+        <td>{{ ticket.title }}</td><td>{{ ticket.get_process_display }}</td><td>{{ ticket.queue.code }}</td>
+        <td>{{ ticket.status }}</td><td>{{ ticket.priority }}</td>
+        <td>{{ ticket.assignee.username|default:"Sin asignar" }}</td><td>{{ ticket.created_at|date:"d/m/Y H:i" }}</td>
+      </tr>{% empty %}<tr><td colspan="8">No hay tickets para los filtros y permisos seleccionados.</td></tr>{% endfor %}
+    </tbody>
+  </table></div>
+  <div class="form-actions">
+    {% if page.has_previous %}<a class="button button-secondary" href="?pagina={{ page.previous_page_number }}">Anterior</a>{% endif %}
+    <span class="meta">Página {{ page.number }} de {{ page.paginator.num_pages }} · {{ page.paginator.count }} tickets</span>
+    {% if page.has_next %}<a class="button button-secondary" href="?pagina={{ page.next_page_number }}">Siguiente</a>{% endif %}
+  </div>
+</main>
+{% endblock %}

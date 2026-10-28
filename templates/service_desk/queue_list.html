@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Colas | Service Desk{% endblock %}
+{% block content %}<main class="container content">
+  <div class="page-header"><div><h1>Colas de atención</h1><p class="meta">Cada cola atiende exactamente un proceso.</p></div>
+    {% if is_admin %}<a class="button" href="{% url 'service_desk:queue_create' %}">Nueva cola</a>{% endif %}</div>
+  <div class="table-wrap"><table><thead><tr><th>Código</th><th>Nombre</th><th>Proceso</th><th>Nivel</th><th>Atención objetivo</th><th>Resolución objetivo</th><th>Estado</th><th>Gestión</th></tr></thead><tbody>
+    {% for queue in queues %}<tr><td>{{ queue.code }}</td><td>{{ queue.name }}</td><td>{{ queue.get_process_display }}</td>
+      <td>{{ queue.support_level }}</td><td>{{ queue.first_response_target_minutes }} min</td><td>{{ queue.resolution_target_minutes }} min</td>
+      <td>{% if queue.active %}Activa{% else %}Inactiva{% endif %}</td>
+      <td>{% if queue.pk in manageable_ids %}<a href="{% url 'service_desk:queue_edit' queue.pk %}">Configurar</a>{% else %}-{% endif %}</td></tr>
+    {% empty %}<tr><td colspan="8">Sin colas disponibles.</td></tr>{% endfor %}
+  </tbody></table></div>
+</main>{% endblock %}

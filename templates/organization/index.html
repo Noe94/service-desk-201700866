@@ -1,0 +1,41 @@
+﻿{% extends "base.html" %}
+
+{% block title %}
+Organización - Catálogo TI
+{% endblock %}
+
+{% block content %}
+
+<main class="container content">
+
+    <div class="page-header">
+        <div>
+            <h1>Estructura organizacional</h1>
+            <p class="meta">
+                Administración de la jerarquía organizacional.
+            </p>
+        </div>
+    </div>
+
+    <div class="card-grid">
+
+        {% for item in entities %}
+            <a
+                class="summary-card"
+                href="{% url 'organization:list' item.key %}"
+            >
+                <h2>{{ item.titulo }}</h2>
+
+                <p>
+                    {{ item.activos }} activos
+                    ·
+                    {{ item.total }} total
+                </p>
+            </a>
+        {% endfor %}
+
+    </div>
+
+</main>
+
+{% endblock %}

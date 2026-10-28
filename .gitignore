@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+.venv/
+
+# Django
+*.log
+db.sqlite3
+staticfiles/
+media/
+protected_media/
+
+# Environment variables
+.env
+.env.*
+
+# Keep example
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Python tooling
+.mypy_cache/
+.ruff_cache/
+
+# Docker local artifacts
+docker-data/

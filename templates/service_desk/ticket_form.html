@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Nuevo ticket | Service Desk{% endblock %}
+{% block content %}
+<main class="container content">
+  <div class="page-header"><div><h1>Nuevo ticket</h1><p class="meta">Proceso: {{ process }}</p></div>
+    <a class="button button-secondary" href="{% url 'service_desk:ticket_create' %}">Cambiar proceso</a>
+  </div>
+  <div class="form-card">
+    <form method="post">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      {% for field in form %}
+        <div class="form-group">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {{ field.errors }}
+          {% if field.help_text %}<p class="meta">{{ field.help_text }}</p>{% endif %}
+        </div>
+      {% endfor %}
+      <div class="form-actions"><button class="button" type="submit">Crear ticket</button></div>
+    </form>
+  </div>
+</main>
+{% endblock %}

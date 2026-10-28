@@ -1,0 +1,30 @@
+﻿{% if page.paginator.num_pages > 1 %}
+
+<div class="pagination">
+
+    {% if page.has_previous %}
+        <a
+            class="button button-small button-secondary"
+            href="?{% if pagination_query %}{{ pagination_query }}&{% endif %}page={{ page.previous_page_number }}"
+        >
+            Anterior
+        </a>
+    {% endif %}
+
+    <span>
+        Página {{ page.number }}
+        de {{ page.paginator.num_pages }}
+    </span>
+
+    {% if page.has_next %}
+        <a
+            class="button button-small button-secondary"
+            href="?{% if pagination_query %}{{ pagination_query }}&{% endif %}page={{ page.next_page_number }}"
+        >
+            Siguiente
+        </a>
+    {% endif %}
+
+</div>
+
+{% endif %}

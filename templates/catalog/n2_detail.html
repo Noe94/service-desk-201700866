@@ -1,0 +1,149 @@
+﻿{% extends "base.html" %}
+
+{% block title %}
+{{ service.codigo }} - Catálogo TI
+{% endblock %}
+
+{% block content %}
+
+<main class="container content">
+
+    <section class="panel">
+
+        <div class="page-header">
+
+            <div>
+                <h1>
+                    {{ service.codigo }}
+                </h1>
+
+                <p class="meta">
+                    {{ service.nombre }}
+                </p>
+            </div>
+
+            {% if request.user.rol == "ADMIN" %}
+
+                <div class="actions-cell">
+
+                    <a
+                        class="button"
+                        href="{% url 'catalog:n2_update' service.pk %}"
+                    >
+                        Editar
+                    </a>
+
+                    <form
+                        method="post"
+                        action="{% url 'catalog:n2_toggle' service.pk %}"
+                    >
+                        {% csrf_token %}
+
+                        <button
+                            class="button button-secondary"
+                            type="submit"
+                        >
+                            {% if service.activo is True %}
+                                Desactivar
+                            {% elif service.activo is False %}
+                                Reactivar
+                            {% else %}
+                                Activar
+                            {% endif %}
+                        </button>
+
+                    </form>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+        <div class="detail-grid">
+
+            <div>
+                <span>Nivel 1</span>
+                <strong>{{ service.nivel1 }}</strong>
+            </div>
+
+            <div>
+                <span>Estado</span>
+                <strong>
+                    {% if service.activo is True %}
+                        Activo
+                    {% elif service.activo is False %}
+                        Inactivo
+                    {% else %}
+                        Desconocido
+                    {% endif %}
+                </strong>
+            </div>
+
+            <div>
+                <span>Clase</span>
+                <strong>{{ service.clase|default:"-" }}</strong>
+            </div>
+
+            <div>
+                <span>Criticidad</span>
+                <strong>{{ service.criticidad|default:"-" }}</strong>
+            </div>
+
+            <div>
+                <span>Tipo</span>
+                <strong>{{ service.tipo|default:"-" }}</strong>
+            </div>
+
+            <div>
+                <span>Mínimo</span>
+                <strong>{{ service.minimo|default:"-" }}</strong>
+            </div>
+
+            <div>
+                <span>Máximo</span>
+                <strong>{{ service.maximo|default:"-" }}</strong>
+            </div>
+
+            <div>
+                <span>Sección responsable</span>
+                <strong>
+                    {{ service.seccion_responsable|default:"Sin asignar" }}
+                </strong>
+            </div>
+
+            <div>
+                <span>Usuario responsable</span>
+                <strong>
+                    {{ service.usuario_responsable|default:"Sin asignar" }}
+                </strong>
+            </div>
+
+            <div>
+                <span>Requiere revisión</span>
+                <strong>
+                    {% if service.requiere_revision %}
+                        Sí
+                    {% else %}
+                        No
+                    {% endif %}
+                </strong>
+            </div>
+
+        </div>
+
+        <div class="detail-section">
+            <h2>Descripción</h2>
+            <p>{{ service.descripcion|default:"Sin información" }}</p>
+        </div>
+
+        <div class="detail-section">
+            <h2>Métrica</h2>
+            <p>{{ service.metrica|default:"Sin información" }}</p>
+        </div>
+
+    </section>
+
+</main>
+
+{% endblock %}

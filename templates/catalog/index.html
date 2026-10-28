@@ -1,0 +1,76 @@
+﻿{% extends "base.html" %}
+
+{% block title %}
+Catálogo - Catálogo TI
+{% endblock %}
+
+{% block content %}
+
+<main class="container content">
+
+    <div class="page-header">
+        <div>
+            <h1>Catálogo de servicios</h1>
+            <p class="meta">
+                Consulta y administración de servicios N1 y N2.
+            </p>
+        </div>
+    </div>
+
+    <div class="card-grid">
+
+        <a
+            class="summary-card"
+            href="{% url 'catalog:n1_list' %}"
+        >
+            <h2>Servicios Nivel 1</h2>
+            <p>{{ n1_total }} registros</p>
+        </a>
+
+        <a
+            class="summary-card"
+            href="{% url 'catalog:n2_list' %}"
+        >
+            <h2>Servicios Nivel 2</h2>
+            <p>{{ n2_total }} registros</p>
+        </a>
+
+        <a
+            class="summary-card"
+            href="{% url 'catalog:n2_list' %}?revision=si"
+        >
+            <h2>Requieren revisión</h2>
+            <p>{{ n2_revision }} registros</p>
+        </a>
+
+        <a
+            class="summary-card"
+            href="{% url 'catalog:option_list' 'clase' %}"
+        >
+            <h2>Clases</h2>
+            <p>Catálogo maestro</p>
+        </a>
+
+        <a
+            class="summary-card"
+            href="{% url 'catalog:option_list' 'criticidad' %}"
+        >
+            <h2>Criticidades</h2>
+            <p>Catálogo maestro</p>
+        </a>
+
+        <a
+            class="summary-card"
+            href="{% url 'catalog:option_list' 'tipo' %}"
+        >
+            <h2>Tipos</h2>
+            <p>Catálogo maestro</p>
+        </a>
+
+    </div>
+
+</main>
+
+{% endblock %}
+
+

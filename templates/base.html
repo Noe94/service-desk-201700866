@@ -1,0 +1,108 @@
+﻿{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>
+        {% block title %}Service Desk TI{% endblock %}
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/app.css' %}"
+    >
+</head>
+
+<body>
+<div class="page">
+
+    {% if request.user.is_authenticated %}
+        <header class="navbar">
+            <div class="container navbar-content">
+
+                <div class="nav-left">
+                    <a
+                        class="brand"
+                        href="{% url 'accounts:dashboard' %}"
+                    >
+                        Service Desk TI
+                    </a>
+
+                    <nav class="nav-links">
+                        <a href="{% url 'accounts:dashboard' %}">
+                            Inicio
+                        </a>
+
+                        <a href="{% url 'catalog:index' %}">
+                            Catálogo
+                        </a>
+
+                        <a href="{% url 'service_desk:tickets' %}">
+                            Tickets
+                        </a>
+
+                        <a href="{% url 'service_desk:dashboard' %}">Tablero</a>
+                        <a href="{% url 'service_desk:knowledge' %}">FAQ</a>
+
+                        <a href="{% url 'service_desk:queues' %}">
+                            Colas
+                        </a>
+
+                        <a href="{% url 'cmdb:list' %}">
+                            CMDB
+                        </a>
+
+                        <a href="{% url 'organization:index' %}">
+                            Organización
+                        </a>
+
+                        <a href="{% url 'accounts:user_list' %}">
+                            Usuarios
+                        </a>
+                    </nav>
+                </div>
+
+                <div class="nav-user">
+                    <span>
+                        {{ request.user.username }}
+                        ·
+                        {{ request.user.get_rol_display }}
+                    </span>
+
+                    <form
+                        method="post"
+                        action="{% url 'accounts:logout' %}"
+                    >
+                        {% csrf_token %}
+
+                        <button
+                            class="button button-secondary"
+                            type="submit"
+                        >
+                            Cerrar sesión
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+        </header>
+    {% endif %}
+
+    {% if messages %}
+        <div class="container" role="status">
+            {% for message in messages %}
+                <p class="meta">{{ message }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% block content %}
+    {% endblock %}
+
+</div>
+</body>
+</html>
+
+

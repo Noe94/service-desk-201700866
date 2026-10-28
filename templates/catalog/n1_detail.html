@@ -1,0 +1,46 @@
+﻿{% extends "base.html" %}
+
+{% block content %}
+
+<main class="container content">
+
+    <section class="panel">
+
+        <div class="page-header">
+
+            <div>
+                <h1>{{ service.codigo }}</h1>
+                <p>{{ service.nombre }}</p>
+            </div>
+
+            {% if request.user.rol == "ADMIN" %}
+                <a
+                    class="button"
+                    href="{% url 'catalog:n1_update' service.pk %}"
+                >
+                    Editar
+                </a>
+            {% endif %}
+
+        </div>
+
+        <p>
+            <strong>Estado:</strong>
+
+            {% if service.activo %}
+                Activo
+            {% else %}
+                Inactivo
+            {% endif %}
+        </p>
+
+        <p>
+            <strong>Servicios N2:</strong>
+            {{ service.servicios_nivel2.count }}
+        </p>
+
+    </section>
+
+</main>
+
+{% endblock %}

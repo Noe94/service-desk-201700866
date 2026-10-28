@@ -1,0 +1,201 @@
+﻿{% extends "base.html" %}
+
+{% block title %}
+Servicios N2 - Catálogo TI
+{% endblock %}
+
+{% block content %}
+
+<main class="container content">
+
+    <div class="page-header">
+
+        <div>
+            <h1>Servicios Nivel 2</h1>
+            <p class="meta">
+                Servicios detallados del catálogo.
+            </p>
+        </div>
+
+        {% if request.user.rol == "ADMIN" %}
+            <a
+                class="button"
+                href="{% url 'catalog:n2_create' %}"
+            >
+                Nuevo
+            </a>
+        {% endif %}
+
+    </div>
+
+    <form method="get" class="filter-grid">
+
+        <input
+            class="form-control"
+            type="search"
+            name="q"
+            value="{{ query }}"
+            placeholder="Código o nombre"
+        >
+
+        <select class="form-control" name="nivel1">
+            <option value="">Todos los N1</option>
+
+            {% for item in nivel1_options %}
+                <option
+                    value="{{ item.pk }}"
+                    {% if nivel1_selected == item.pk|stringformat:"s" %}selected{% endif %}
+                >
+                    {{ item.codigo }} - {{ item.nombre }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <select class="form-control" name="estado">
+            <option value="">Todos los estados</option>
+            <option value="activo" {% if estado == "activo" %}selected{% endif %}>
+                Activo
+            </option>
+            <option value="inactivo" {% if estado == "inactivo" %}selected{% endif %}>
+                Inactivo
+            </option>
+            <option value="desconocido" {% if estado == "desconocido" %}selected{% endif %}>
+                Desconocido
+            </option>
+        </select>
+
+        <select class="form-control" name="clase">
+            <option value="">Todas las clases</option>
+
+            {% for item in clase_options %}
+                <option
+                    value="{{ item.pk }}"
+                    {% if clase_selected == item.pk|stringformat:"s" %}selected{% endif %}
+                >
+                    {{ item.nombre }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <select class="form-control" name="criticidad">
+            <option value="">Todas las criticidades</option>
+
+            {% for item in criticidad_options %}
+                <option
+                    value="{{ item.pk }}"
+                    {% if criticidad_selected == item.pk|stringformat:"s" %}selected{% endif %}
+                >
+                    {{ item.nombre }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <select class="form-control" name="tipo">
+            <option value="">Todos los tipos</option>
+
+            {% for item in tipo_options %}
+                <option
+                    value="{{ item.pk }}"
+                    {% if tipo_selected == item.pk|stringformat:"s" %}selected{% endif %}
+                >
+                    {{ item.nombre }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <div class="filter-actions">
+            <button class="button" type="submit">
+                Filtrar
+            </button>
+
+            <a
+                class="button button-secondary"
+                href="{% url 'catalog:n2_list' %}"
+            >
+                Limpiar
+            </a>
+        </div>
+
+    </form>
+
+    <div class="table-wrap">
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Nombre</th>
+                    <th>N1</th>
+                    <th>Clase</th>
+                    <th>Criticidad</th>
+                    <th>Estado</th>
+                    <th>Detalle</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for service in page %}
+
+                    <tr>
+
+                        <td>{{ service.codigo }}</td>
+                        <td>{{ service.nombre }}</td>
+                        <td>{{ service.nivel1.codigo }}</td>
+
+                        <td>
+                            {{ service.clase|default:"-" }}
+                        </td>
+
+                        <td>
+                            {{ service.criticidad|default:"-" }}
+                        </td>
+
+                        <td>
+                            {% if service.activo is True %}
+                                <span class="badge badge-active">
+                                    Activo
+                                </span>
+                            {% elif service.activo is False %}
+                                <span class="badge">
+                                    Inactivo
+                                </span>
+                            {% else %}
+                                <span class="badge badge-warning">
+                                    Desconocido
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <a
+                                href="{% url 'catalog:n2_detail' service.pk %}"
+                            >
+                                Ver
+                            </a>
+                        </td>
+
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+                        <td colspan="7">
+                            No se encontraron servicios.
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    {% include "catalog/pagination.html" %}
+
+</main>
+
+{% endblock %}

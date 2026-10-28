@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block title %}Base de conocimientos{% endblock %}
+{% block content %}<main class="container content"><h1>Ayuda y base de conocimientos · Nivel 0</h1>
+<form method="get" class="card"><label>Buscar ayuda <input class="form-control" name="q" value="{{ request.GET.q }}"></label>
+<button class="button" type="submit">Buscar</button></form>
+{% for article in articles %}<article class="card"><h2>{{ article.title }}</h2><h3>{{ article.question }}</h3><p>{{ article.answer|linebreaks }}</p></article>
+{% empty %}<p class="meta">No se encontraron artículos.</p>{% endfor %}
+</main>{% endblock %}

@@ -1,0 +1,118 @@
+﻿{% extends "base.html" %}
+
+{% block title %}
+{{ config.titulo }} - Catálogo TI
+{% endblock %}
+
+{% block content %}
+
+<main class="container content">
+
+    <div class="page-header">
+        <div>
+            <h1>{{ config.titulo }}</h1>
+            <p class="meta">
+                Estructura organizacional.
+            </p>
+        </div>
+
+        {% if request.user.rol == "ADMIN" %}
+            <a
+                class="button"
+                href="{% url 'organization:create' entity %}"
+            >
+                Nuevo
+            </a>
+        {% endif %}
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="message {{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Nombre</th>
+                    <th>Depende de</th>
+                    <th>Estado</th>
+
+                    {% if request.user.rol == "ADMIN" %}
+                        <th>Acciones</th>
+                    {% endif %}
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for row in rows %}
+                    <tr>
+                        <td>{{ row.obj.codigo }}</td>
+                        <td>{{ row.obj.nombre }}</td>
+                        <td>{{ row.parent }}</td>
+
+                        <td>
+                            {% if row.obj.activo %}
+                                <span class="badge badge-active">
+                                    Activo
+                                </span>
+                            {% else %}
+                                <span class="badge">
+                                    Inactivo
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        {% if request.user.rol == "ADMIN" %}
+                            <td class="actions-cell">
+
+                                <a
+                                    class="button button-small button-secondary"
+                                    href="{% url 'organization:update' entity row.obj.pk %}"
+                                >
+                                    Editar
+                                </a>
+
+                                <form
+                                    method="post"
+                                    action="{% url 'organization:toggle' entity row.obj.pk %}"
+                                >
+                                    {% csrf_token %}
+
+                                    <button
+                                        class="button button-small button-secondary"
+                                        type="submit"
+                                    >
+                                        {% if row.obj.activo %}
+                                            Desactivar
+                                        {% else %}
+                                            Reactivar
+                                        {% endif %}
+                                    </button>
+                                </form>
+
+                            </td>
+                        {% endif %}
+                    </tr>
+
+                {% empty %}
+                    <tr>
+                        <td colspan="5">
+                            No hay registros.
+                        </td>
+                    </tr>
+                {% endfor %}
+
+            </tbody>
+        </table>
+    </div>
+
+</main>
+
+{% endblock %}

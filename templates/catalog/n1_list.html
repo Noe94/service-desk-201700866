@@ -1,0 +1,164 @@
+﻿{% extends "base.html" %}
+
+{% block title %}
+Servicios N1 - Catálogo TI
+{% endblock %}
+
+{% block content %}
+
+<main class="container content">
+
+    <div class="page-header">
+
+        <div>
+            <h1>Servicios Nivel 1</h1>
+            <p class="meta">
+                Categorías principales del catálogo.
+            </p>
+        </div>
+
+        {% if request.user.rol == "ADMIN" %}
+            <a
+                class="button"
+                href="{% url 'catalog:n1_create' %}"
+            >
+                Nuevo
+            </a>
+        {% endif %}
+
+    </div>
+
+    <form method="get" class="filter-bar">
+
+        <input
+            class="form-control"
+            type="search"
+            name="q"
+            value="{{ query }}"
+            placeholder="Buscar código o nombre"
+        >
+
+        <select
+            class="form-control"
+            name="estado"
+        >
+            <option value="">Todos los estados</option>
+            <option value="activo" {% if estado == "activo" %}selected{% endif %}>
+                Activo
+            </option>
+            <option value="inactivo" {% if estado == "inactivo" %}selected{% endif %}>
+                Inactivo
+            </option>
+        </select>
+
+        <button class="button" type="submit">
+            Filtrar
+        </button>
+
+        <a
+            class="button button-secondary"
+            href="{% url 'catalog:n1_list' %}"
+        >
+            Limpiar
+        </a>
+
+    </form>
+
+    <div class="table-wrap">
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Nombre</th>
+                    <th>Estado</th>
+                    <th>Detalle</th>
+
+                    {% if request.user.rol == "ADMIN" %}
+                        <th>Acciones</th>
+                    {% endif %}
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for service in page %}
+
+                    <tr>
+                        <td>{{ service.codigo }}</td>
+                        <td>{{ service.nombre }}</td>
+
+                        <td>
+                            {% if service.activo %}
+                                <span class="badge badge-active">
+                                    Activo
+                                </span>
+                            {% else %}
+                                <span class="badge">
+                                    Inactivo
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <a
+                                href="{% url 'catalog:n1_detail' service.pk %}"
+                            >
+                                Ver
+                            </a>
+                        </td>
+
+                        {% if request.user.rol == "ADMIN" %}
+                            <td class="actions-cell">
+
+                                <a
+                                    class="button button-small button-secondary"
+                                    href="{% url 'catalog:n1_update' service.pk %}"
+                                >
+                                    Editar
+                                </a>
+
+                                <form
+                                    method="post"
+                                    action="{% url 'catalog:n1_toggle' service.pk %}"
+                                >
+                                    {% csrf_token %}
+
+                                    <button
+                                        class="button button-small button-secondary"
+                                        type="submit"
+                                    >
+                                        {% if service.activo %}
+                                            Desactivar
+                                        {% else %}
+                                            Reactivar
+                                        {% endif %}
+                                    </button>
+
+                                </form>
+
+                            </td>
+                        {% endif %}
+
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+                        <td colspan="5">
+                            No se encontraron servicios.
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+        </table>
+
+    </div>
+
+    {% include "catalog/pagination.html" %}
+
+</main>
+
+{% endblock %}

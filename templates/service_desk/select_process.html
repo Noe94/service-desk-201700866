@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Nuevo ticket | Service Desk{% endblock %}
+{% block content %}
+<main class="container content">
+  <div class="page-header"><div><h1>Crear ticket</h1><p class="meta">Seleccione el proceso para mostrar sus campos y validaciones específicas.</p></div></div>
+  <div class="card-grid">
+    {% for value, name in processes %}
+      <a class="card" href="{% url 'service_desk:ticket_create' %}?proceso={{ value }}">
+        <h3>{{ name }}</h3><p>Registrar solicitud</p>
+      </a>
+    {% endfor %}
+  </div>
+</main>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} | Service Desk{% endblock %}
+{% block content %}<main class="container content">
+  <div class="page-header"><h1>{{ title }}</h1></div>
+  <div class="form-card"><form method="post">{% csrf_token %}{{ form.as_p }}
+    <button class="button" type="submit">Guardar cola</button></form></div>
+  {% if queue %}<div class="card"><h3>Asignación de permisos</h3>
+    <p>Los permisos se gestionan por rol, por usuario o ambos. CONSULTA no adquiere permisos de modificación.</p>
+    <a class="button" href="{% url 'service_desk:queue_role_grant' queue.pk %}">Permisos por rol</a>
+    <a class="button button-secondary" href="{% url 'service_desk:queue_user_grant' queue.pk %}">Permisos por usuario</a>
+  </div>{% endif %}
+</main>{% endblock %}

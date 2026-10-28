@@ -1,0 +1,34 @@
+﻿{% extends "base.html" %}
+
+{% block title %}
+Inicio - Catálogo TI
+{% endblock %}
+
+{% block content %}
+
+<main class="container content">
+    <section class="panel">
+
+        <h1>Inicio</h1>
+
+        <p>
+            Bienvenido al sistema de administración
+            del Catálogo de Servicios TI.
+        </p>
+
+        <p class="meta">
+            Usuario:
+            <strong>{{ request.user.username }}</strong>
+        </p>
+
+        <p class="meta">
+            Rol:
+            <strong>
+                {{ request.user.get_rol_display }}
+            </strong>
+        </p>
+
+    </section>
+</main>
+
+{% endblock %}

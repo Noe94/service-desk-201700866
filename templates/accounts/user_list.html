@@ -1,0 +1,146 @@
+﻿{% extends "base.html" %}
+
+{% block title %}
+Usuarios - Catálogo TI
+{% endblock %}
+
+{% block content %}
+
+<main class="container content">
+
+    <div class="page-header">
+
+        <div>
+            <h1>Usuarios</h1>
+
+            <p class="meta">
+                Usuarios registrados en el sistema.
+            </p>
+        </div>
+
+        {% if request.user.rol == "ADMIN" %}
+            <a
+                class="button"
+                href="{% url 'accounts:user_create' %}"
+            >
+                Nuevo
+            </a>
+        {% endif %}
+
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="message {{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="table-wrap">
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Usuario</th>
+                    <th>Correo</th>
+                    <th>Rol</th>
+                    <th>Puesto</th>
+                    <th>Empresa</th>
+                    <th>Estado</th>
+
+                    {% if request.user.rol == "ADMIN" %}
+                        <th>Acciones</th>
+                    {% endif %}
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for row in rows %}
+                    <tr>
+
+                        <td>
+                            {{ row.user.username }}
+                        </td>
+
+                        <td>
+                            {{ row.user.email }}
+                        </td>
+
+                        <td>
+                            {{ row.user.get_rol_display }}
+                        </td>
+
+                        <td>
+                            {{ row.puesto }}
+                        </td>
+
+                        <td>
+                            {{ row.empresa }}
+                        </td>
+
+                        <td>
+                            {% if row.user.is_active %}
+                                <span class="badge badge-active">
+                                    Activo
+                                </span>
+                            {% else %}
+                                <span class="badge">
+                                    Inactivo
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        {% if request.user.rol == "ADMIN" %}
+                            <td class="actions-cell">
+
+                                <a
+                                    class="button button-small button-secondary"
+                                    href="{% url 'accounts:user_update' row.user.pk %}"
+                                >
+                                    Editar
+                                </a>
+
+                                <form
+                                    method="post"
+                                    action="{% url 'accounts:user_toggle' row.user.pk %}"
+                                >
+                                    {% csrf_token %}
+
+                                    <button
+                                        class="button button-small button-secondary"
+                                        type="submit"
+                                    >
+                                        {% if row.user.is_active %}
+                                            Desactivar
+                                        {% else %}
+                                            Reactivar
+                                        {% endif %}
+                                    </button>
+
+                                </form>
+
+                            </td>
+                        {% endif %}
+
+                    </tr>
+
+                {% empty %}
+                    <tr>
+                        <td colspan="7">
+                            No hay usuarios registrados.
+                        </td>
+                    </tr>
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</main>
+
+{% endblock %}

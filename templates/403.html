@@ -1,0 +1,33 @@
+﻿{% extends "base.html" %}
+
+{% block title %}
+Acceso denegado - Catálogo TI
+{% endblock %}
+
+{% block content %}
+
+<main class="container content">
+
+    <section class="panel">
+
+        <h1>Acceso denegado</h1>
+
+        <p>
+            Su usuario no tiene permisos para realizar
+            esta operación.
+        </p>
+
+        <div class="actions">
+            <a
+                class="button"
+                href="{% url 'accounts:dashboard' %}"
+            >
+                Volver al inicio
+            </a>
+        </div>
+
+    </section>
+
+</main>
+
+{% endblock %}

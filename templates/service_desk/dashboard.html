@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Tablero · Service Desk{% endblock %}
+{% block content %}<main class="container content"><h1>Tablero de atención</h1>
+<p class="meta">Métricas sobre tickets visibles para tu cuenta. Objetivos medidos en tiempo calendario menos pausas.</p>
+<div class="card-grid">
+<div class="card"><h3>Tickets</h3><p>{{ total }} totales · {{ open }} abiertos · {{ paused }} en pausa</p></div>
+<div class="card"><h3>Mayor antigüedad abierta</h3><p>{{ oldest }} horas efectivas</p></div>
+<div class="card"><h3>Primera respuesta</h3><p>{{ average_first|default_if_none:'Sin muestra' }} minutos promedio · {{ response_pct|default_if_none:'Sin muestra' }} % dentro del objetivo</p></div>
+<div class="card"><h3>Resolución</h3><p>{{ average_resolved|default_if_none:'Sin muestra' }} minutos promedio · {{ resolution_pct|default_if_none:'Sin muestra' }} % dentro del objetivo</p></div>
+</div>
+<div class="card"><h2>Distribución</h2>
+{% for dimension, values in aggregates.items %}<h3>{{ dimension|title }}</h3>
+  {% for name, value in values %}<p>{{ name }}: {{ value }}</p>{% empty %}<p class="meta">Sin tickets visibles.</p>{% endfor %}
+{% endfor %}</div>
+</main>{% endblock %}
