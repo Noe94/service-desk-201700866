@@ -11,9 +11,87 @@
 - Datos de integración en SQLite temporal: importador **12 N1 / 46 N2**,
   generador **5,000 nuevos y 0 al repetir**, 7 colas, 37 tickets,
   4 artículos y 25 vínculos de CI con ticket.
-- Git commit: **pendiente**, no se ha creado todavía en el nuevo repositorio.
-- **Docker y PostgreSQL no disponibles en este entorno**. P18 y mediciones
-  reales en PostgreSQL están pendientes en Windows.
+## Validación real en Windows con Docker y PostgreSQL
+
+**Fecha:** 28 de octubre de 2026.
+**Responsable:** Erick Noe Gómez López, carné 201700866.
+**Entorno:** Windows, PowerShell, Docker Desktop, Django y PostgreSQL.
+**Repositorio:** https://github.com/Noe94/service-desk-201700866
+**Commit inicial:** 00ad0f8.
+
+### Preparación del entorno
+
+Comando ejecutado:
+
+`powershell -ExecutionPolicy Bypass -File .\scripts\prepare.ps1`
+
+Resultados observados:
+- Docker Compose levantó los servicios.
+- PostgreSQL alcanzó el estado saludable.
+- Se aplicaron las migraciones.
+- Se conservaron 12 servicios de nivel 1 y 46 de nivel 2.
+- Se generaron 5,000 dispositivos CMDB.
+- Se prepararon 7 colas y 37 tickets de demostración.
+
+### Pruebas automatizadas
+
+Comando ejecutado:
+
+`powershell -ExecutionPolicy Bypass -File .\scripts\verify.ps1`
+
+Resultados obtenidos:
+- Django system check: 0 problemas.
+- Pruebas encontradas: 80.
+- Pruebas ejecutadas: 80.
+- Pruebas aprobadas: 80.
+- Tiempo observado: 30.188 segundos.
+- Resultado final: HARNESS PRINCIPAL: OK.
+
+La suite creó una base de datos temporal de pruebas y la eliminó
+al finalizar, sin borrar los datos preparados para evaluación.
+
+### P18. Persistencia después de reiniciar Docker
+
+Comando utilizado:
+
+`docker compose restart`
+
+Conteos observados antes del reinicio:
+- Dispositivos: 5,000.
+- Tickets: 37.
+- Colas: 7.
+
+Conteos observados después del reinicio:
+- Dispositivos: 5,000.
+- Tickets: 37.
+- Colas: 7.
+
+Resultado: los conteos principales permanecieron iguales.
+Pendiente: verificar explícitamente catálogo e historial antes y después
+del reinicio para completar toda la evidencia de P18.
+
+### P11. Evento E2 e incidente generado
+
+Prueba funcional realizada desde la aplicación web:
+
+- Ticket de origen: SD-0000020.
+- Proceso: Gestión de eventos.
+- Categoría: E2.
+- Estado inicial: EVALUADO.
+- Acción: transición a RESPONDIDO.
+- Resultado: incidente SD-0000038 generado automáticamente.
+- Se registró una notificación dentro de la aplicación.
+- La bitácora registró INCIDENTE_DERIVADO y TRANSICION.
+- Actor observado: admin_demo.
+- Se conservaron los valores anteriores, nuevos y el motivo.
+
+Después de esta operación, el total de tickets pasó de 37 a 38.
+
+Resultado: caso E2 comprobado funcionalmente.
+Pendiente: completar las verificaciones manuales de E0, E1 y E3.
+
+Las capturas fueron revisadas durante la sesión de trabajo.
+Falta incorporarlas como archivos de evidencia versionados.
 
 ## Matriz
 
