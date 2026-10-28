@@ -113,6 +113,36 @@ Pendiente: completar las verificaciones manuales de E0, E1 y E3.
 Las capturas fueron revisadas durante la sesión de trabajo.
 Falta incorporarlas como archivos de evidencia versionados.
 
+### P11. Verificacion automatizada E0-E3
+
+Fecha: 28 de octubre de 2026.
+
+Comando ejecutado:
+
+`docker compose run --rm web python manage.py test apps.service_desk.tests.DeskTests.test_p11_categorias_eventos_e0_e3 -v 2`
+
+Entrada: cuatro categorias de eventos E0, E1, E2 y E3.
+
+Resultados obtenidos:
+- E0: registro sin incidente ni notificacion.
+- E1: evaluacion sin incidente ni notificacion.
+- E2: incidente I1 y notificacion.
+- E3: incidente I6 y notificacion.
+- Reprocesamiento E2/E3: no se duplicaron incidentes ni avisos.
+- Una prueba automatizada con cuatro subpruebas.
+- Tiempo observado: 2.561 segundos.
+- Resultado: OK.
+
+Verificacion posterior:
+- Suite completa: 82 pruebas.
+- Aprobadas: 82.
+- Tiempo observado: 33.492 segundos.
+- Django system check: 0 problemas.
+- Resultado: HARNESS PRINCIPAL: OK.
+
+La prueba utilizo una base temporal de PostgreSQL y no modifico
+los datos de demostracion.
+
 ## Matriz
 
 | Caso | Implementación | Evidencia actual | Pendiente |
@@ -127,7 +157,7 @@ Falta incorporarlas como archivos de evidencia versionados.
 | P08 | `transfer_ticket` | Rechaza proceso incompatible, exige motivo | Ensayo UI |
 | P09 | `workflows.py` y `apps/service_desk/tests.py` | Siete recorridos completos con aprobaciones, rechazo de cierre directo y bitácora; prueba aprobada en PostgreSQL | Verificación manual adicional por roles |
 | P10 | `TicketApproval` | Cambio sin aprobar y autoaprobación rechazados | — |
-| P11 | `EventIncident`, `DeskNotification` | E2 crea uno y es idempotente | Escenarios UI E0/E1/E3 completos |
+| P11 | `EventIncident`, `DeskNotification` y pruebas Django | E0-E3 comprobados en PostgreSQL: E0/E1 sin incidente, E2 con incidente I1 y E3 con incidente I6; E2 verificado tambien en interfaz | Demostracion manual E3 pendiente |
 | P12 | `INCIDENT_GUIDANCE`, función complementaria | Pruebas de límites y mapeo | Revisión detallada de I0–I6 UI |
 | P13 | `TicketRelation` | Relaciones entre tickets modeladas | Recorrido incidente–problema–cambio |
 | P14 | `CIRelation`, `potentially_affected_services` | Ciclos y recorrido inverso probados | Navegación en PostgreSQL |

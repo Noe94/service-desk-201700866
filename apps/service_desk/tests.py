@@ -425,3 +425,111 @@ class DeskTests(TestCase):
                     ).count(),
                     aprobaciones_esperadas,
                 )
+
+
+    def test_p11_categorias_eventos_e0_e3(self):
+        from .models import DeskNotification, EventIncident
+        from .services import ensure_event_incident
+
+        for categoria in ("E0", "E1", "E2", "E3"):
+            with self.subTest(categoria=categoria):
+
+                ticket = self.make_ticket(
+                    process=Process.EVENT,
+                    event_category=categoria,
+                )
+
+                self.assertEqual(ticket.status, "REGISTRADO")
+
+                if categoria != "E0":
+                    claim_ticket(ticket.pk, self.agent)
+
+                    transition_ticket(
+                        ticket.pk,
+                        self.agent,
+                        "CLASIFICADO",
+                        reason="Clasificacion del evento",
+                    )
+
+                    transition_ticket(
+                        ticket.pk,
+                        self.agent,
+                        "EVALUADO",
+                        reason="Evaluacion del evento",
+                    )
+
+                if categoria in {"E2", "E3"}:
+                    transition_ticket(
+                        ticket.pk,
+                        self.agent,
+                        "RESPONDIDO",
+                        reason="Impacto confirmado",
+                    )
+
+                    enlace = EventIncident.objects.get(event=ticket)
+                    incidente = enlace.incident
+
+                    categoria_esperada = (
+                        "I6" if categoria == "E3" else "I1"
+                    )
+
+                    self.assertEqual(
+                        incidente.incident_category,
+                        categoria_esperada,
+                    )
+
+                    self.assertEqual(
+                        DeskNotification.objects.filter(
+                            event=ticket
+                        ).count(),
+                        1,
+                    )
+
+                    # Reprocesar no debe duplicar el incidente.
+                    incidente_repetido = ensure_event_incident(
+                        ticket,
+                        self.agent,
+                    )
+
+                    self.assertEqual(
+                        incidente_repetido.pk,
+                        incidente.pk,
+                    )
+
+                    self.assertEqual(
+                        EventIncident.objects.filter(
+                            event=ticket
+                        ).count(),
+                        1,
+                    )
+
+                    self.assertEqual(
+                        DeskNotification.objects.filter(
+                            event=ticket
+                        ).count(),
+                        1,
+                    )
+
+                else:
+                    self.assertEqual(
+                        EventIncident.objects.filter(
+                            event=ticket
+                        ).count(),
+                        0,
+                    )
+
+                    self.assertEqual(
+                        DeskNotification.objects.filter(
+                            event=ticket
+                        ).count(),
+                        0,
+                    )
+
+                ticket.refresh_from_db()
+
+                if categoria == "E0":
+                    self.assertEqual(ticket.status, "REGISTRADO")
+                elif categoria == "E1":
+                    self.assertEqual(ticket.status, "EVALUADO")
+                else:
+                    self.assertEqual(ticket.status, "RESPONDIDO")
