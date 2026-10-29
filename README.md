@@ -155,7 +155,7 @@ Recuperación ante error: verifique Docker Desktop, puerto 8000, `.env`,
 
 - Docker Compose y PostgreSQL funcionando correctamente.
 - Django system check: 0 problemas.
-- Suite automatizada mas reciente: 85 de 85 pruebas aprobadas en 18.675 segundos.
+- Suite automatizada mas reciente: 87 de 87 pruebas aprobadas en 18.203 segundos.
 - Catálogo: 12 servicios N1 y 46 servicios N2.
 - CMDB: 5,000 dispositivos persistidos.
 - Service Desk: 7 colas y 37 tickets iniciales de demostración.
@@ -171,10 +171,11 @@ Los resultados detallados se encuentran en `docs/PRUEBAS.md`.
 
 ## 8. Limitaciones conocidas de esta versión
 
-- La creación de un servicio N2 desde una solicitud aprobada es manual mediante
-  el módulo de catálogo. El campo de expediente solo referencia la propuesta.
-- Los vínculos entre problema y cambio pueden consultarse mediante relaciones
-  de tickets, pero falta una pantalla especializada para ese recorrido.
+- Desde un ticket de nuevos servicios aprobado, un agente autorizado puede
+  crear un servicio N2 o vincular uno existente, sin duplicar códigos.
+  La operación requiere completar el formulario del ticket: no es automática.
+- Las relaciones entre incidentes, problemas y cambios se pueden crear y
+  consultar desde el detalle de los tickets, con validaciones de permisos.
 - La información de prioridad y redundancia de I0–I6 es orientación de clase;
   no se fuerza automáticamente el SLA por la duración.
 - Los commits de evolución del contexto deben registrarse en el repositorio

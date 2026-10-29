@@ -266,6 +266,85 @@ Resultado obtenido:
 Las pruebas automatizadas usan una base temporal. No se eliminaron los
 5,000 dispositivos ni los tickets preparados para la evaluacion.
 
+### Validacion final de nuevas funciones web
+
+**Fecha:** 28 de octubre de 2026.
+
+**Commit:** `7f7d577`.
+
+**Entorno:** Docker Compose, Django y PostgreSQL.
+
+Se incorporaron dos funciones adicionales:
+
+1. Crear o vincular un servicio de catalogo desde una solicitud aprobada.
+2. Relacionar tickets desde la interfaz y consultar los vinculos.
+
+#### Prueba de servicios aprobados
+
+Prueba ejecutada:
+
+`apps.service_desk.tests.DeskTests.test_ui_nuevo_servicio_aprobado_sin_duplicados`
+
+Se verifico:
+- Rechazo de la operacion antes de la aprobacion.
+- Aprobacion registrada mediante el flujo del ticket.
+- Creacion de un servicio N2 desde el ticket.
+- Vinculacion con su servicio N1.
+- Repeticion sin duplicar el servicio.
+- Vinculacion a un servicio N2 existente.
+- Bitacora de SERVICIO_VINCULADO.
+- Rechazo HTTP 403 para un solicitante sin permiso.
+
+Resultado: OK.
+
+#### Prueba de relaciones desde la interfaz
+
+Prueba ejecutada:
+
+`apps.service_desk.tests.DeskTests.test_ui_relaciones_incidente_problema_cambio`
+
+Se verifico:
+- Vinculo incidente-problema.
+- Vinculo problema-cambio.
+- Relaciones consultables en ambos sentidos.
+- Visualizacion desde el detalle del ticket.
+- Repeticion sin duplicar la relacion.
+- Rechazo de autorrelaciones.
+- Rechazo HTTP 403 para operaciones sin permiso.
+- Bitacora de VINCULO_TICKET.
+
+Resultado: OK.
+
+#### Pruebas nuevas
+
+Comando:
+
+`docker compose run --rm web python manage.py test apps.service_desk.tests.DeskTests.test_ui_nuevo_servicio_aprobado_sin_duplicados apps.service_desk.tests.DeskTests.test_ui_relaciones_incidente_problema_cambio -v 2`
+
+Resultado:
+- Pruebas ejecutadas: 2.
+- Pruebas aprobadas: 2.
+- Tiempo observado: 1.456 segundos.
+
+#### Harness completo posterior
+
+Comando:
+
+`powershell -ExecutionPolicy Bypass -File .\scripts\verify.ps1`
+
+Resultado obtenido:
+- Django system check: 0 problemas.
+- Pruebas encontradas: 87.
+- Pruebas aprobadas: 87.
+- Tiempo observado: 18.203 segundos.
+- Resultado final: HARNESS PRINCIPAL: OK.
+
+Las pruebas utilizaron una base temporal de PostgreSQL.
+No modificaron los datos preparados para evaluacion.
+
+Pendiente: realizar la demostracion manual de las nuevas funciones
+en el navegador durante la defensa.
+
 ## Matriz
 
 | Caso | Implementación | Evidencia actual | Pendiente |
@@ -282,12 +361,12 @@ Las pruebas automatizadas usan una base temporal. No se eliminaron los
 | P10 | `TicketApproval` | Cambio sin aprobar y autoaprobación rechazados | — |
 | P11 | `EventIncident`, `DeskNotification` y pruebas Django | E0-E3 comprobados en PostgreSQL: E0/E1 sin incidente, E2 con incidente I1 y E3 con incidente I6; E2 verificado tambien en interfaz | Demostracion manual E3 pendiente |
 | P12 | `INCIDENT_GUIDANCE`, función complementaria | Pruebas de límites y mapeo | Revisión detallada de I0–I6 UI |
-| P13 | TicketRelation y prueba de trazabilidad | Recorrido incidente-problema-cambio recuperado mediante relaciones ORM; historial existente en los tres tickets. | Recorrido desde interfaz pendiente |
+| P13 | `TicketRelation`, vistas web y pruebas Django | Incidente-problema-cambio recuperable desde ORM y visible en el detalle web; permisos, vinculación y rechazo de duplicados comprobados. | Ensayo manual adicional en navegador |
 | P14 | `CIRelation`, `potentially_affected_services` | Ciclos y recorrido inverso probados | Navegación en PostgreSQL |
 | P15 | `TicketHistory`, `reopen_ticket` | Reapertura, cierre, actor | — |
 | P16 | Vista `cmdb:list`, 30 por página | Medicion real en PostgreSQL sobre 5000 CI: paginas 1, 84, 167 y filtro SERVIDOR; ver `docs/evidencias/P16-medicion-20261028.md` | Latencia HTTP no medida |
 | P17 | dashboard, pausas y reapertura | Tres tickets controlados: 2 abiertos, 1 pausado, primera respuesta promedio 11.7 min, resolucion promedio 70 min y antiguedad maxima 3.3 h. | Demostracion manual adicional |
-| P18 | Volumenes postgres_data y ttachments_data | Reinicio real: catalogo, 5000 CI, tickets e historial conservados. Archivo sintetico recuperado con SHA-256 identico. | — |
+| P18 | Volúmenes `postgres_data` y `attachments_data` | Reinicio real: catálogo, 5,000 CI, tickets e historial conservados; adjunto sintético recuperado con SHA-256 idéntico. | — |
 
 No se informa como exitoso un caso parcialmente implementado. Las pruebas
 aislan sus datos y no eliminan los registros de evaluación. Para capturas de

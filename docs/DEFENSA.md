@@ -83,7 +83,7 @@ Mostrar AGENTS.md, IA.md y los commits.
 
 Harness Engineering:
 Mostrar scripts/prepare.ps1 y scripts/verify.ps1.
-Resultado comprobado: 82 pruebas aprobadas.
+Resultado comprobado: 87 pruebas aprobadas.
 
 Loop Engineering:
 Explicar un defecto, su correccion y nueva verificacion.
@@ -107,8 +107,8 @@ una validacion o una prueba pequena.
 
 ## Limitaciones que deben declararse
 
-- La creacion de catalogo desde un servicio nuevo
-  aprobado requiere una operacion manual.
+- La creacion o vinculacion desde un ticket aprobado requiere
+  que un agente complete el formulario; no es automatica.
 - No todas las rutas tienen una demostracion visual.
 - Las mediciones P16 corresponden a Django ORM,
   no a latencia HTTP.
