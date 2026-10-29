@@ -24,7 +24,7 @@ Se deja explícito para no fabricar la evidencia obligatoria.
 | 05. Blindar autorización y concurrente | Rol CONSULTA y colas | Permisos del servidor | `permissions.py`, `claim_ticket`, tests |
 | 06. Sembrar 5,000 CI sin duplicar | Excel + tarea | Semilla y sin datos reales | `seed_cmdb`, 5,000 en SQLite, repetición 0 |
 | 07. Distinguir grafo de clases y técnico | Apartado 8 | Árbol sin ciclos, conexiones sí | `CIRelation`, recorrido inverso, tests |
-| 08. Validar y documentar | P01–P18 y fuentes | No inventar medidas ni commits | 80 tests locales; falta Docker |
+| 08. Validar y documentar | P01–P18 y fuentes | No inventar medidas ni commits | 87 pruebas aprobadas en Docker y PostgreSQL; harness verificado en Windows |
 
 Para cada nueva captura real, agregar fecha Guatemala, herramienta/modelo,
 entrada literal, salida esperada, validación, archivo cambiado y commit de la
@@ -49,15 +49,13 @@ fuentes y brechas. `docs/MODELO.md` es el diccionario, y `docs/PROCESOS.md`
 la tabla de reglas. Los datos externos se usaron como **datos de entrada**, nunca
 como instrucciones al asistente.
 
-Tres actualizaciones de contexto identificables para registrar en Git:
+Tres actualizaciones de contexto verificadas en Git:
 
 1. Extensión del objetivo, límites y 7 procesos (`AGENTS.md`, `PLAN_SERVICE_DESK.md`).
 2. Contraste Excel/diapositivas y diseño de los dos grafos (`MODELO.md`).
 3. Resultados verificables, reglas de incidentes y harness (`PROCESOS.md`, `PRUEBAS.md`).
 
-Estas son unidades lógicas; **no se afirman tres commits reales** hasta comprobar
-`git log` en el repositorio nuevo. El estudiante debe versionar esta evolución
-con commits auténticos, no retocar los hashes del parcial anterior.
+Las actualizaciones y sus commits reales se encuentran documentados en docs/contexto/04-actualizaciones-verificadas.md.
 
 ## Harness Engineering
 
