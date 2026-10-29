@@ -21,7 +21,90 @@
     {% if event_notice %}<p><strong>Notificación en aplicación:</strong> {{ event_notice.message }} ({{ event_notice.created_at|date:'d/m/Y H:i' }})</p>{% endif %}
     {% if ticket.incident_category %}<p>Incidente {{ ticket.incident_category }}</p>{% endif %}
   </div>
-  {% if is_agent or can_approve %}
+    <!-- RELACIONES_VERIFICABLES_SERVICE_DESK -->
+  <div class="card">
+    <h3>Relaciones con otros tickets</h3>
+
+    {% for relation in linked_targets %}
+      <p>
+        Relacionado con:
+        <a href="{% url 'service_desk:ticket_detail' relation.target.pk %}">
+          {{ relation.target.number }}
+        </a>
+        ({{ relation.get_relation_type_display }})
+      </p>
+    {% endfor %}
+
+    {% for relation in linked_sources %}
+      <p>
+        Relacionado desde:
+        <a href="{% url 'service_desk:ticket_detail' relation.source.pk %}">
+          {{ relation.source.number }}
+        </a>
+        ({{ relation.get_relation_type_display }})
+      </p>
+    {% endfor %}
+
+    {% if is_agent %}
+      <form method="post" action="{% url 'service_desk:ticket_relation_add' ticket.pk %}">
+        {% csrf_token %}
+
+        <label>Numero del ticket destino</label>
+        <input class="form-control" name="target_number" placeholder="SD-0000001" required>
+
+        <label>Tipo de relacion</label>
+        <select class="form-control" name="relation_type">
+          <option value="RELACIONADO">Relacionado</option>
+          <option value="CAUSA">Causado por</option>
+          <option value="DUPLICADO">Duplicado</option>
+        </select>
+
+        <label>Motivo</label>
+        <input class="form-control" name="reason" required>
+
+        <button class="button button-secondary" type="submit">
+          Vincular ticket
+        </button>
+      </form>
+    {% endif %}
+  </div>
+
+  {% if is_agent and ticket.process == "NUEVOS_SERVICIOS" %}
+    {% if ticket.status == "APROBADO" or ticket.status == "IMPLEMENTACION" %}
+      <div class="card">
+        <h3>Crear o vincular servicio aprobado</h3>
+
+        <form method="post" action="{% url 'service_desk:ticket_service_link' ticket.pk %}">
+          {% csrf_token %}
+
+          <label>Codigo del servicio N2</label>
+          <input class="form-control" name="code" required>
+
+          <label>Nombre del servicio nuevo</label>
+          <input class="form-control" name="name">
+
+          <label>Servicio nivel 1 (para crear uno nuevo)</label>
+          <select class="form-control" name="level1_id">
+            <option value="">Seleccione si es un servicio nuevo</option>
+            {% for nivel in active_n1 %}
+              <option value="{{ nivel.pk }}">{{ nivel.codigo }} - {{ nivel.nombre }}</option>
+            {% endfor %}
+          </select>
+
+          <p class="meta">
+            Si el codigo ya existe, se vincula sin duplicarlo.
+            Si es nuevo, indique nombre y nivel 1.
+          </p>
+
+          <button class="button" type="submit">
+            Crear o vincular servicio
+          </button>
+        </form>
+      </div>
+    {% endif %}
+  {% endif %}
+
+{% if is_agent or can_approve %}
   {% if is_agent and not ticket.closed_at %}<div class="card"><h3>{% if ticket.paused_at %}Reanudar{% else %}Pausar{% endif %} atención</h3>
     <form method="post" action="{% if ticket.paused_at %}{% url 'service_desk:ticket_resume' ticket.pk %}{% else %}{% url 'service_desk:ticket_pause' ticket.pk %}{% endif %}">{% csrf_token %}
       <label>Motivo <input class="form-control" name="reason" required></label>

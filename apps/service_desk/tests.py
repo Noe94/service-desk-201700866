@@ -721,6 +721,300 @@ class DeskTests(TestCase):
         )
 
 
+    def test_ui_nuevo_servicio_aprobado_sin_duplicados(self):
+        from django.urls import reverse
+        from apps.catalog.models import ServicioNivel2
+
+        ticket = self.make_ticket(
+            Process.NEW_SERVICE,
+            details={
+                "necesidad": "Nuevo servicio para evaluacion",
+                "viabilidad": "Viable",
+                "resolucion": "Implementado",
+            },
+        )
+
+        self.client.force_login(self.agent)
+
+        url = reverse(
+            "service_desk:ticket_service_link",
+            args=[ticket.pk],
+        )
+
+        codigo = "SD-PRUEBA-NUEVO-N2"
+
+        datos = {
+            "code": codigo,
+            "name": "Servicio nuevo de prueba",
+            "level1_id": self.service.nivel1_id,
+        }
+
+        respuesta = self.client.post(url, datos)
+
+        self.assertEqual(respuesta.status_code, 302)
+
+        self.assertFalse(
+            ServicioNivel2.objects.filter(codigo=codigo).exists()
+        )
+
+        for estado in ("ANALISIS", "PENDIENTE_APROBACION"):
+            transition_ticket(
+                ticket.pk,
+                self.agent,
+                estado,
+                reason="Revision del servicio",
+            )
+
+        transition_ticket(
+            ticket.pk,
+            self.approver,
+            "APROBADO",
+            reason="Solicitud autorizada",
+        )
+
+        respuesta = self.client.post(url, datos)
+
+        self.assertEqual(respuesta.status_code, 302)
+
+        ticket.refresh_from_db()
+
+        servicio_nuevo = ServicioNivel2.objects.get(
+            codigo=codigo
+        )
+
+        self.assertEqual(
+            ticket.service_id,
+            servicio_nuevo.pk,
+        )
+
+        self.assertEqual(
+            servicio_nuevo.nivel1_id,
+            self.service.nivel1_id,
+        )
+
+        self.assertEqual(
+            ticket.details.get("servicio_vinculado"),
+            codigo,
+        )
+
+        self.assertEqual(
+            ticket.history.filter(
+                action="SERVICIO_VINCULADO"
+            ).count(),
+            1,
+        )
+
+        respuesta = self.client.post(url, datos)
+
+        self.assertEqual(respuesta.status_code, 302)
+
+        self.assertEqual(
+            ServicioNivel2.objects.filter(codigo=codigo).count(),
+            1,
+        )
+
+        self.assertEqual(
+            ticket.history.filter(
+                action="SERVICIO_VINCULADO"
+            ).count(),
+            1,
+        )
+
+        respuesta = self.client.post(
+            url,
+            {"code": self.service.codigo},
+        )
+
+        self.assertEqual(respuesta.status_code, 302)
+
+        ticket.refresh_from_db()
+
+        self.assertEqual(
+            ticket.service_id,
+            self.service.pk,
+        )
+
+        self.assertEqual(
+            ticket.history.filter(
+                action="SERVICIO_VINCULADO"
+            ).count(),
+            2,
+        )
+
+        self.client.force_login(self.requester)
+
+        respuesta = self.client.post(
+            url,
+            {
+                "code": "SD-SIN-PERMISO",
+                "name": "Servicio no autorizado",
+                "level1_id": self.service.nivel1_id,
+            },
+        )
+
+        self.assertEqual(respuesta.status_code, 403)
+
+        self.assertFalse(
+            ServicioNivel2.objects.filter(
+                codigo="SD-SIN-PERMISO"
+            ).exists()
+        )
+
+    def test_ui_relaciones_incidente_problema_cambio(self):
+        from django.urls import reverse
+        from .models import TicketRelation
+
+        incidente = self.make_ticket(Process.INCIDENT)
+        problema = self.make_ticket(Process.PROBLEM)
+        cambio = self.make_ticket(Process.CHANGE)
+
+        self.client.force_login(self.agent)
+
+        url_incidente = reverse(
+            "service_desk:ticket_relation_add",
+            args=[incidente.pk],
+        )
+
+        datos_incidente = {
+            "target_number": problema.number,
+            "relation_type": "RELACIONADO",
+            "reason": "Incidente recurrente",
+        }
+
+        respuesta = self.client.post(
+            url_incidente,
+            datos_incidente,
+        )
+
+        self.assertEqual(respuesta.status_code, 302)
+
+        self.assertEqual(
+            TicketRelation.objects.filter(
+                source=incidente,
+                target=problema,
+            ).count(),
+            1,
+        )
+
+        self.assertEqual(
+            incidente.history.filter(
+                action="VINCULO_TICKET"
+            ).count(),
+            1,
+        )
+
+        self.client.post(url_incidente, datos_incidente)
+
+        self.assertEqual(
+            TicketRelation.objects.filter(
+                source=incidente,
+                target=problema,
+            ).count(),
+            1,
+        )
+
+        self.assertEqual(
+            incidente.history.filter(
+                action="VINCULO_TICKET"
+            ).count(),
+            1,
+        )
+
+        url_problema = reverse(
+            "service_desk:ticket_relation_add",
+            args=[problema.pk],
+        )
+
+        respuesta = self.client.post(
+            url_problema,
+            {
+                "target_number": cambio.number,
+                "relation_type": "CAUSA",
+                "reason": "Cambio correctivo",
+            },
+        )
+
+        self.assertEqual(respuesta.status_code, 302)
+
+        self.assertTrue(
+            TicketRelation.objects.filter(
+                source=problema,
+                target=cambio,
+            ).exists()
+        )
+
+        detalle_incidente = self.client.get(
+            reverse(
+                "service_desk:ticket_detail",
+                args=[incidente.pk],
+            )
+        )
+
+        self.assertEqual(
+            detalle_incidente.status_code,
+            200,
+        )
+
+        self.assertContains(
+            detalle_incidente,
+            problema.number,
+        )
+
+        detalle_problema = self.client.get(
+            reverse(
+                "service_desk:ticket_detail",
+                args=[problema.pk],
+            )
+        )
+
+        self.assertContains(
+            detalle_problema,
+            incidente.number,
+        )
+
+        self.assertContains(
+            detalle_problema,
+            cambio.number,
+        )
+
+        respuesta = self.client.post(
+            url_incidente,
+            {
+                "target_number": incidente.number,
+                "relation_type": "RELACIONADO",
+                "reason": "Intento incorrecto",
+            },
+        )
+
+        self.assertEqual(respuesta.status_code, 302)
+
+        self.assertFalse(
+            TicketRelation.objects.filter(
+                source=incidente,
+                target=incidente,
+            ).exists()
+        )
+
+        self.client.force_login(self.requester)
+
+        respuesta = self.client.post(
+            url_incidente,
+            {
+                "target_number": cambio.number,
+                "relation_type": "RELACIONADO",
+                "reason": "Intento sin permiso",
+            },
+        )
+
+        self.assertEqual(respuesta.status_code, 403)
+
+        self.assertFalse(
+            TicketRelation.objects.filter(
+                source=incidente,
+                target=cambio,
+            ).exists()
+        )
+
 from django.test import TransactionTestCase
 
 

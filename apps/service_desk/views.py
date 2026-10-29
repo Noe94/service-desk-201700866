@@ -12,6 +12,7 @@ from django.views.decorators.http import require_POST
 from django.utils import timezone
 
 from apps.accounts.permissions import admin_required
+from apps.catalog.models import ServicioNivel1
 
 from .forms import (
     CommentForm, QueueForm, QueueRoleGrantForm, QueueUserGrantForm,
@@ -20,7 +21,7 @@ from .forms import (
 from .models import (
     KnowledgeArticle, Process, Queue, QueueRoleGrant, QueueUserGrant, Ticket, TicketAttachment,
 )
-from .permissions import accessible_tickets, can_create, is_admin, queue_allowed, require_ticket_access
+from .permissions import accessible_tickets, can_create, can_view_ticket, is_admin, queue_allowed, require_ticket_access
 from .services import (
     TicketConflict, add_comment, claim_ticket, create_ticket, log_action, pause_ticket,
     reopen_ticket, resume_ticket,
@@ -159,6 +160,15 @@ def ticket_detail(request, pk):
         "attachments": ticket.attachments.all(),
         "event_incident": getattr(ticket, "generated_incident", None),
         "event_notice": getattr(ticket, "incident_notice", None),
+        "linked_targets": [
+            item for item in ticket.out_relations.select_related("target")
+            if can_view_ticket(request.user, item.target)
+        ],
+        "linked_sources": [
+            item for item in ticket.in_relations.select_related("source")
+            if can_view_ticket(request.user, item.source)
+        ],
+        "active_n1": ServicioNivel1.objects.filter(activo=True),
         "is_agent": is_agent,
         "can_transfer": queue_allowed(request.user, ticket.queue, "transfer"),
         "can_approve": queue_allowed(request.user, ticket.queue, "approve"),
@@ -350,3 +360,39 @@ def queue_user_grant(request, pk):
     return render(request, "service_desk/queue_grant.html", {
         "form": form, "queue": queue, "title": "Permisos por usuario", "grants": queue.user_grants.select_related("user"),
     })
+
+
+@login_required
+@require_POST
+def ticket_service_link(request, pk):
+    from .services import link_approved_catalog_service
+
+    return _action_result(
+        request,
+        pk,
+        lambda: link_approved_catalog_service(
+            pk,
+            request.user,
+            code=request.POST.get("code", ""),
+            name=request.POST.get("name", ""),
+            level1_id=request.POST.get("level1_id"),
+        ),
+    )
+
+
+@login_required
+@require_POST
+def ticket_relation_add(request, pk):
+    from .services import link_related_ticket
+
+    return _action_result(
+        request,
+        pk,
+        lambda: link_related_ticket(
+            pk,
+            request.user,
+            target_number=request.POST.get("target_number", ""),
+            relation_type=request.POST.get("relation_type", ""),
+            reason=request.POST.get("reason", ""),
+        ),
+    )

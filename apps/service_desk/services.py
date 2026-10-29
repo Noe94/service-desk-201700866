@@ -265,3 +265,155 @@ def add_comment(ticket_id, actor, text, *, internal=False):
     log_action(ticket, actor, "NOTA_INTERNA" if internal else "COMENTARIO",
                new={"comment_id": comment.pk, "internal": internal})
     return comment
+
+
+@transaction.atomic
+def link_approved_catalog_service(ticket_id, actor, *, code, name="", level1_id=None):
+    from apps.catalog.models import ServicioNivel1, ServicioNivel2
+
+    ticket = (
+        Ticket.objects.select_for_update()
+        .select_related("queue", "service")
+        .get(pk=ticket_id)
+    )
+
+    require_queue(actor, ticket.queue, "attend")
+
+    if ticket.assignee_id not in {None, actor.pk} and not is_admin(actor):
+        raise PermissionDenied("El ticket pertenece a otro agente.")
+
+    if ticket.process != Process.NEW_SERVICE:
+        raise ValidationError("El ticket no pertenece a nuevos servicios.")
+
+    if ticket.status not in {"APROBADO", "IMPLEMENTACION"}:
+        raise ValidationError("El servicio debe estar aprobado antes de vincularlo.")
+
+    if not ticket.approvals.filter(decision="APROBADO").exists():
+        raise ValidationError("No existe aprobacion registrada para este ticket.")
+
+    code = (code or "").strip()
+    name = (name or "").strip()
+
+    if not code or len(code) > 100:
+        raise ValidationError("Indique un codigo de servicio valido.")
+
+    service = ServicioNivel2.objects.select_for_update().filter(
+        codigo=code
+    ).first()
+
+    created = False
+
+    if service is None:
+
+        if not name or len(name) > 255:
+            raise ValidationError("Indique el nombre del nuevo servicio.")
+
+        try:
+            parent_id = int(level1_id)
+        except (TypeError, ValueError):
+            raise ValidationError("Seleccione un nivel 1 valido.")
+
+        parent = ServicioNivel1.objects.filter(
+            pk=parent_id,
+            activo=True,
+        ).first()
+
+        if parent is None:
+            raise ValidationError("El servicio nivel 1 no existe o esta inactivo.")
+
+        service, created = ServicioNivel2.objects.get_or_create(
+            codigo=code,
+            defaults={
+                "nivel1": parent,
+                "nombre": name,
+                "activo": True,
+            },
+        )
+
+    if service.activo is False:
+        raise ValidationError("No se puede vincular un servicio inactivo.")
+
+    details = dict(ticket.details or {})
+
+    if (
+        ticket.service_id == service.pk
+        and details.get("servicio_vinculado") == code
+    ):
+        return service
+
+    previous = ticket.service.codigo
+
+    details["servicio_vinculado"] = code
+
+    ticket.service = service
+    ticket.details = details
+
+    ticket.save(update_fields=["service", "details", "updated_at"])
+
+    log_action(
+        ticket,
+        actor,
+        "SERVICIO_VINCULADO",
+        old={"service": previous},
+        new={"service": code, "created": created},
+        reason="Vinculacion de servicio aprobado",
+    )
+
+    return service
+
+
+@transaction.atomic
+def link_related_ticket(source_id, actor, *, target_number, relation_type, reason):
+
+    source = (
+        Ticket.objects.select_for_update()
+        .select_related("queue")
+        .get(pk=source_id)
+    )
+
+    require_queue(actor, source.queue, "attend")
+
+    if source.assignee_id not in {None, actor.pk} and not is_admin(actor):
+        raise PermissionDenied("El ticket pertenece a otro agente.")
+
+    target_number = (target_number or "").strip()
+    reason = (reason or "").strip()
+
+    if not target_number or not reason:
+        raise ValidationError("Indique el ticket destino y el motivo.")
+
+    if relation_type not in TicketRelation.Type.values:
+        raise ValidationError("Tipo de relacion invalido.")
+
+    target = Ticket.objects.select_related("queue").filter(
+        number=target_number
+    ).first()
+
+    if target is None:
+        raise ValidationError("No existe el ticket destino.")
+
+    if target.pk == source.pk:
+        raise ValidationError("Un ticket no puede vincularse consigo mismo.")
+
+    if not can_view_ticket(actor, target):
+        raise PermissionDenied("No esta autorizado a consultar el ticket destino.")
+
+    relation, created = TicketRelation.objects.get_or_create(
+        source=source,
+        target=target,
+        relation_type=relation_type,
+    )
+
+    if created:
+        log_action(
+            source,
+            actor,
+            "VINCULO_TICKET",
+            new={
+                "target": target.number,
+                "relation_type": relation_type,
+            },
+            reason=reason,
+        )
+
+    return relation
