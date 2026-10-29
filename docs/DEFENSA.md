@@ -83,7 +83,7 @@ Mostrar AGENTS.md, IA.md y los commits.
 
 Harness Engineering:
 Mostrar scripts/prepare.ps1 y scripts/verify.ps1.
-Resultado comprobado: 87 pruebas aprobadas.
+Resultado comprobado: 89 pruebas aprobadas.
 
 Loop Engineering:
 Explicar un defecto, su correccion y nueva verificacion.

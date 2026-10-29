@@ -23,10 +23,15 @@ permiso y una aprobación distinta del solicitante. Incidentes requieren soluci�
 antes de resolver. Problemas piden causa raíz antes de la solución definitiva.
 Los servicios nuevos piden necesidad y viabilidad antes de aprobar.
 
-**Limitación explícita:** los campos de código propuesto y de cambio correctivo están
-documentados como información de expediente; la creación automática de un catálogo nuevo
-y la vinculación formal problema–cambio mediante selector dedicado siguen pendientes.
-No se deben prometer en la defensa como automatismos ya implementados.
+**Estado actualizado:** desde un ticket de nuevos servicios aprobado,
+un agente autorizado puede crear un servicio N2 o vincular uno existente
+desde el formulario del ticket, sin duplicar códigos.
+Las relaciones incidente–problema–cambio también pueden registrarse
+desde el detalle del ticket utilizando su número y un motivo.
+
+**Limitaciones:** la creación de servicios no es automática y todavía
+no existe un selector especializado para recorrer problemas y cambios.
+No se deben presentar estas funciones como automatismos.
 
 ## Roles y autorizaciones
 

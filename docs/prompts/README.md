@@ -1,4 +1,4 @@
-﻿# Evidencia de Prompt Engineering
+# Evidencia de Prompt Engineering
 
 Fecha: 30 de septiembre de 2026
 
@@ -45,3 +45,17 @@ Cada prompt registra:
 - herramienta;
 - modelo;
 - fecha.
+
+## Auditorías reales del tercer parcial
+
+- `07-auditoria-cmdb.md`: solicitud literal del estudiante.
+- `08-auditoria-procesos.md`: solicitud literal del estudiante.
+- `09-auditoria-entrega.md`: solicitud literal del estudiante.
+
+Fecha: 28 de octubre de 2026.
+
+Los tres archivos conservan entradas reales de auditoría.
+Las evidencias 01–05 pertenecen al trabajo anterior y su
+literalidad requiere contraste con las conversaciones originales.
+El archivo 06 registra iteraciones, no constituye por sí solo
+un sexto prompt literal.

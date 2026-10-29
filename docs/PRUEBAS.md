@@ -419,3 +419,42 @@ docker compose exec -T web python manage.py shell -c "from apps.cmdb.models impo
 
 Esperado: 5,000 dispositivos del conjunto, por lo menos 37 tickets
 y 7 colas antes y después. Anotar **obtenido** solo tras ejecutar.
+
+## Cierre adicional de seguridad
+
+Se incorporaron controles específicos para impedir que un
+usuario de consulta modifique tickets propios mediante
+comentarios, adjuntos o reaperturas.
+
+También se incorporó una validación básica de firma de archivo
+para PDF, PNG y JPEG, así como comprobación de contenido textual
+UTF-8 y del límite de 10 MiB.
+
+Pruebas añadidas:
+
+- `test_consulta_no_modifica_ticket_propio_por_http`
+- `test_adjuntos_rechazan_contenido_falso_y_tamano_excesivo`
+
+Estas pruebas no sustituyen un análisis antivirus ni un
+escáner de seguridad de contenido. Su resultado debe validarse
+con el harness antes de publicar.
+
+## Validación final de 89 pruebas
+
+Fecha: 28 de octubre de 2026.
+Entorno: Windows, Docker Compose y PostgreSQL.
+
+Se incorporaron dos pruebas adicionales de seguridad:
+
+- Rechazo de comentarios, adjuntos y reaperturas desde el rol CONSULTA.
+- Rechazo de contenido incompatible con la extensión y de archivos mayores de 10 MiB.
+
+La ejecución aislada de las dos pruebas resultó satisfactoria.
+El harness completo aprobó 89 de 89 pruebas.
+
+La validación de firmas es básica; no equivale a inspección antivirus
+ni a validación estructural completa de documentos.
+
+Las evidencias de prompts literales 07, 08 y 09 son solicitudes reales.
+Los registros previos requieren comprobar su literalidad antes de
+declarar completo ese requisito académico.

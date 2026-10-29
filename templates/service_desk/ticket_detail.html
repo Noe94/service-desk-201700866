@@ -146,17 +146,21 @@
     {% for comment in comments %}<p><strong>{{ comment.author.username }}</strong> · {{ comment.created_at|date:"d/m/Y H:i" }}
       {% if comment.internal %}<span class="badge badge-warning">Interna</span>{% endif %}<br>{{ comment.text|linebreaks }}</p>
     {% empty %}<p class="meta">Sin comentarios.</p>{% endfor %}
+    {% if can_write_ticket %}
     <form method="post" action="{% url 'service_desk:ticket_comment' ticket.pk %}">{% csrf_token %}
       {{ comment_form.as_p }}<button class="button" type="submit">Agregar comentario</button>
     </form>
+    {% endif %}
   </div>
   <div class="card"><h3>Evidencias y adjuntos</h3>
     {% for attachment in attachments %}<p><a href="{% url 'service_desk:ticket_attachment_download' attachment.pk %}">{{ attachment.file.name }}</a></p>
     {% empty %}<p class="meta">Sin adjuntos.</p>{% endfor %}
+    {% if can_write_ticket %}
     <form method="post" enctype="multipart/form-data" action="{% url 'service_desk:ticket_attachment_upload' ticket.pk %}">
       {% csrf_token %}<input type="file" name="file" accept=".pdf,.png,.jpg,.jpeg,.txt,.log" required>
       <button class="button button-secondary" type="submit">Adjuntar (máx. 10 MiB)</button>
     </form>
+    {% endif %}
   </div>
   <div class="card"><h3>Bitácora de auditoría</h3>
     <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Actor</th><th>Acción</th><th>Anterior</th><th>Nuevo</th><th>Motivo</th></tr></thead>

@@ -91,6 +91,108 @@ class DeskTests(TestCase):
         data.update(kwargs)
         return create_ticket(**data)
 
+    def test_consulta_no_modifica_ticket_propio_por_http(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from django.utils import timezone
+
+        ticket = self.make_ticket(
+            requester=self.consulta,
+            actor=self.admin,
+        )
+
+        self.client.force_login(self.consulta)
+
+        detail = self.client.get(
+            reverse("service_desk:ticket_detail", args=[ticket.pk])
+        )
+        self.assertEqual(detail.status_code, 200)
+
+        comment = self.client.post(
+            reverse("service_desk:ticket_comment", args=[ticket.pk]),
+            {"text": "Intento de modificación"},
+        )
+        self.assertEqual(comment.status_code, 403)
+
+        attachment = self.client.post(
+            reverse("service_desk:ticket_attachment_upload", args=[ticket.pk]),
+            {
+                "file": SimpleUploadedFile(
+                    "prueba.txt",
+                    b"contenido de prueba",
+                )
+            },
+        )
+        self.assertEqual(attachment.status_code, 403)
+
+        ticket.status = "CERRADO"
+        ticket.closed_at = timezone.now()
+        ticket.save(update_fields=["status", "closed_at"])
+
+        reopen = self.client.post(
+            reverse("service_desk:ticket_reopen", args=[ticket.pk]),
+            {"reason": "Intento de reapertura"},
+        )
+        self.assertEqual(reopen.status_code, 403)
+
+        self.assertEqual(ticket.comments.count(), 0)
+        self.assertEqual(ticket.attachments.count(), 0)
+        self.assertEqual(
+            ticket.history.filter(action="REAPERTURA").count(),
+            0,
+        )
+
+    def test_adjuntos_rechazan_contenido_falso_y_tamano_excesivo(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from .models import TicketAttachment
+
+        ticket = self.make_ticket()
+
+        invalid_pdf = TicketAttachment(
+            ticket=ticket,
+            uploader=self.agent,
+            file=SimpleUploadedFile(
+                "archivo.pdf",
+                b"Esto no es un documento PDF",
+            ),
+        )
+
+        with self.assertRaises(ValidationError):
+            invalid_pdf.full_clean()
+
+        invalid_text = TicketAttachment(
+            ticket=ticket,
+            uploader=self.agent,
+            file=SimpleUploadedFile(
+                "archivo.txt",
+                b"texto\x00binario",
+            ),
+        )
+
+        with self.assertRaises(ValidationError):
+            invalid_text.full_clean()
+
+        valid_pdf = TicketAttachment(
+            ticket=ticket,
+            uploader=self.agent,
+            file=SimpleUploadedFile(
+                "valido.pdf",
+                b"%PDF-1.7\n%%EOF",
+            ),
+        )
+        valid_pdf.full_clean()
+
+        oversized = TicketAttachment(
+            ticket=ticket,
+            uploader=self.agent,
+            file=SimpleUploadedFile(
+                "grande.txt",
+                b"A" * (10 * 1024 * 1024 + 1),
+            ),
+        )
+
+        with self.assertRaises(ValidationError):
+            oversized.full_clean()
+
     def test_process_type_mapping_for_seven_queues(self):
         for process in Process.values:
             with self.subTest(process=process):

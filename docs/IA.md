@@ -24,7 +24,7 @@ Se deja explícito para no fabricar la evidencia obligatoria.
 | 05. Blindar autorización y concurrente | Rol CONSULTA y colas | Permisos del servidor | `permissions.py`, `claim_ticket`, tests |
 | 06. Sembrar 5,000 CI sin duplicar | Excel + tarea | Semilla y sin datos reales | `seed_cmdb`, 5,000 en SQLite, repetición 0 |
 | 07. Distinguir grafo de clases y técnico | Apartado 8 | Árbol sin ciclos, conexiones sí | `CIRelation`, recorrido inverso, tests |
-| 08. Validar y documentar | P01–P18 y fuentes | No inventar medidas ni commits | 87 pruebas aprobadas en Docker y PostgreSQL; harness verificado en Windows |
+| 08. Validar y documentar | P01–P18 y fuentes | No inventar medidas ni commits | 89 pruebas aprobadas en Docker y PostgreSQL; harness verificado en Windows |
 
 Para cada nueva captura real, agregar fecha Guatemala, herramienta/modelo,
 entrada literal, salida esperada, validación, archivo cambiado y commit de la
@@ -123,3 +123,20 @@ docs/DEFENSA.md.
 
 Las evidencias distinguen los cambios realmente versionados
 de los prompts y resultados que aun no cuentan con registro literal.
+
+## Auditorías literales del cierre
+
+El 28 de octubre de 2026 se recibieron tres solicitudes
+literales del estudiante:
+
+- `docs/prompts/07-auditoria-cmdb.md`.
+- `docs/prompts/08-auditoria-procesos.md`.
+- `docs/prompts/09-auditoria-entrega.md`.
+
+Estas evidencias corresponden a auditorías reales de código.
+Los cinco archivos originales son registros previos de trabajo
+y no se presentan automáticamente como transcripciones literales.
+
+Para acreditar ocho prompts literales se deben recuperar y
+adjuntar los cinco mensajes originales anteriores o sus capturas
+auténticas. No se han fabricado transcripciones adicionales.

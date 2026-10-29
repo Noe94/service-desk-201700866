@@ -8,7 +8,7 @@ from .models import (
     PROCESS_TO_TYPE, DeskNotification, EventIncident, Process, Queue, Ticket,
     TicketApproval, TicketComment, TicketHistory, TicketRelation,
 )
-from .permissions import can_create, can_view_ticket, is_admin, queue_allowed, require_queue
+from .permissions import can_create, can_view_ticket, is_admin, is_readonly, queue_allowed, require_queue
 from .workflows import INITIAL_STATE, check_transition_requirements
 
 
@@ -229,6 +229,8 @@ def transition_ticket(ticket_id, actor, destination, *, reason):
 
 @transaction.atomic
 def reopen_ticket(ticket_id, actor, *, reason):
+    if is_readonly(actor):
+        raise PermissionDenied("El rol de consulta es de solo lectura.")
     ticket = Ticket.objects.select_for_update().select_related("queue").get(pk=ticket_id)
     if not can_view_ticket(actor, ticket):
         raise PermissionDenied("No puede reabrir este ticket.")
@@ -254,6 +256,8 @@ def reopen_ticket(ticket_id, actor, *, reason):
 
 @transaction.atomic
 def add_comment(ticket_id, actor, text, *, internal=False):
+    if is_readonly(actor):
+        raise PermissionDenied("El rol de consulta es de solo lectura.")
     ticket = Ticket.objects.select_for_update().select_related("queue").get(pk=ticket_id)
     if not can_view_ticket(actor, ticket):
         raise PermissionDenied("No puede comentar este ticket.")

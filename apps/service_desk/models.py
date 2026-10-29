@@ -235,8 +235,52 @@ class TicketAttachment(models.Model):
 
     def clean(self):
         super().clean()
-        if self.file and self.file.size > 10 * 1024 * 1024:
-            raise ValidationError({"file": "El adjunto supera el límite de 10 MiB."})
+
+        if not self.file:
+            return
+
+        if self.file.size > 10 * 1024 * 1024:
+            raise ValidationError({
+                "file": "El adjunto supera el límite de 10 MiB."
+            })
+
+        extension = Path(self.file.name).suffix.lower()
+        stream = self.file.file
+        position = 0
+
+        try:
+            position = stream.tell()
+            stream.seek(0)
+            sample = stream.read(4096)
+        except (AttributeError, OSError) as exc:
+            raise ValidationError({
+                "file": "No fue posible examinar el archivo."
+            }) from exc
+        finally:
+            try:
+                stream.seek(position)
+            except (AttributeError, OSError):
+                pass
+
+        if extension == ".pdf":
+            valid = sample.startswith(b"%PDF-")
+        elif extension == ".png":
+            valid = sample.startswith(b"\x89PNG\r\n\x1a\n")
+        elif extension in {".jpg", ".jpeg"}:
+            valid = sample.startswith(b"\xff\xd8\xff")
+        elif extension in {".txt", ".log"}:
+            try:
+                sample.decode("utf-8")
+                valid = b"\x00" not in sample
+            except UnicodeDecodeError:
+                valid = False
+        else:
+            valid = False
+
+        if not valid:
+            raise ValidationError({
+                "file": "El contenido no corresponde al formato permitido."
+            })
 
 
 class TicketRelation(models.Model):

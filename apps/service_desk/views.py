@@ -21,7 +21,7 @@ from .forms import (
 from .models import (
     KnowledgeArticle, Process, Queue, QueueRoleGrant, QueueUserGrant, Ticket, TicketAttachment,
 )
-from .permissions import accessible_tickets, can_create, can_view_ticket, is_admin, queue_allowed, require_ticket_access
+from .permissions import accessible_tickets, can_create, can_view_ticket, is_admin, is_readonly, queue_allowed, require_ticket_access
 from .services import (
     TicketConflict, add_comment, claim_ticket, create_ticket, log_action, pause_ticket,
     reopen_ticket, resume_ticket,
@@ -172,7 +172,8 @@ def ticket_detail(request, pk):
         "is_agent": is_agent,
         "can_transfer": queue_allowed(request.user, ticket.queue, "transfer"),
         "can_approve": queue_allowed(request.user, ticket.queue, "approve"),
-        "can_reopen": ticket.requester_id == request.user.pk or is_agent,
+        "can_reopen": (ticket.requester_id == request.user.pk and not is_readonly(request.user)) or is_agent,
+        "can_write_ticket": not is_readonly(request.user),
         "transition_form": TransitionForm(ticket=ticket),
         "transfer_form": TransferForm(ticket=ticket),
         "details_form": TicketDetailsForm(ticket=ticket),
@@ -267,6 +268,8 @@ def ticket_resume(request, pk):
 @require_POST
 @transaction.atomic
 def ticket_attachment_upload(request, pk):
+    if is_readonly(request.user):
+        raise PermissionDenied("El rol de consulta no puede adjuntar archivos.")
     ticket = get_object_or_404(Ticket.objects.select_for_update().select_related("queue"), pk=pk)
     require_ticket_access(request.user, ticket)
     upload = request.FILES.get("file")

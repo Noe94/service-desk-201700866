@@ -155,7 +155,7 @@ Recuperación ante error: verifique Docker Desktop, puerto 8000, `.env`,
 
 - Docker Compose y PostgreSQL funcionando correctamente.
 - Django system check: 0 problemas.
-- Suite automatizada mas reciente: 87 de 87 pruebas aprobadas en 18.203 segundos.
+- Suite automatizada mas reciente: 89 de 89 pruebas aprobadas en 18.203 segundos.
 - Catálogo: 12 servicios N1 y 46 servicios N2.
 - CMDB: 5,000 dispositivos persistidos.
 - Service Desk: 7 colas y 37 tickets iniciales de demostración.
